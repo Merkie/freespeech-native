@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
 	ActivityIndicator,
@@ -9,6 +10,7 @@ import {
 	View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BottomNav } from '@/components/BottomNav';
 import { EditTileSheet } from '@/components/board/EditTileSheet';
 import { Icon } from '@/components/icons/Icon';
 import { PagesSheet } from '@/components/board/PagesSheet';
@@ -163,21 +165,21 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 		setSelectedTile(null);
 	};
 
-	const toggleEditing = () => {
-		if (editing) {
-			setSelectedTile(null);
-			// Regenerate the project thumbnail after editing the home page, like the web app.
-			if (editedRef.current && board?.isHomePage && projectId) {
-				api.project.updateThumbnail(projectId).catch(() => {});
-				editedRef.current = false;
-			}
+	const exitEditing = useCallback(() => {
+		setSelectedTile(null);
+		// Regenerate the project thumbnail after editing the home page, like the web app.
+		if (editedRef.current && board?.isHomePage && projectId) {
+			api.project.updateThumbnail(projectId).catch(() => {});
+			editedRef.current = false;
 		}
-		setEditing(!editing);
-	};
+		setEditing(false);
+	}, [board?.isHomePage, projectId]);
+
+	const toggleEditing = () => (editing ? exitEditing() : setEditing(true));
 
 	if (error) {
 		return (
-			<SafeAreaView style={[styles.safeArea, styles.center]}>
+			<SafeAreaView style={[styles.safeArea, styles.center, { backgroundColor: colors.background }]}>
 				<Text style={styles.error}>{error}</Text>
 				<Button title="Back to projects" variant="secondary" onPress={() => router.replace('/projects')} />
 			</SafeAreaView>
@@ -186,12 +188,17 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 
 	return (
 		<SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+			<StatusBar style="light" />
 			<View style={styles.header}>
-				<Pressable onPress={() => router.replace('/projects')} style={styles.headerButton}>
-					<Icon name="arrow-left-short" size={28} color={colors.text} />
-				</Pressable>
+				{/* Mirrors the web page header: title centered, page actions on the left while editing. */}
+				{editing ? (
+					<Pressable onPress={() => setPagesSheetOpen(true)} style={styles.headerButton}>
+						<Icon name="grid-fill" size={16} color={colors.text} />
+						<Text style={styles.headerButtonLabel}>Pages</Text>
+					</Pressable>
+				) : null}
 
-				<View style={{ flex: 1 }}>
+				<View style={styles.headerTitleBlock} pointerEvents="none">
 					<Text style={styles.headerTitle} numberOfLines={1}>
 						{board?.page.name ?? '…'}
 					</Text>
@@ -201,28 +208,6 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 						</Text>
 					) : null}
 				</View>
-
-				{board && !board.isHomePage && board.project.homePageId ? (
-					<Pressable
-						onPress={() => router.replace(`/project/${projectId}/${board.project.homePageId}`)}
-						style={styles.headerButton}
-					>
-						<Icon name="house-fill" size={20} color={colors.text} />
-					</Pressable>
-				) : null}
-
-				{editing ? (
-					<Pressable onPress={() => setPagesSheetOpen(true)} style={styles.headerButton}>
-						<Icon name="grid-fill" size={18} color={colors.text} />
-					</Pressable>
-				) : null}
-
-				<Pressable
-					onPress={toggleEditing}
-					style={[styles.headerButton, editing && { backgroundColor: colors.primary, borderColor: colors.primary }]}
-				>
-					<Icon name={editing ? 'check-lg' : 'pencil-fill'} size={18} color={editing ? '#fff' : colors.text} />
-				</Pressable>
 			</View>
 
 			{!editing && settings.sentenceBuilder ? (
@@ -237,7 +222,7 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 			) : null}
 
 			<View
-				style={{ flex: 1 }}
+				style={{ flex: 1, backgroundColor: colors.background }}
 				onLayout={(e) => {
 					const { width, height } = e.nativeEvent.layout;
 					setGridSize({ width, height });
@@ -267,6 +252,8 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 					</ScrollView>
 				)}
 			</View>
+
+			<BottomNav editing={editing} onToggleEdit={toggleEditing} onExitEdit={exitEditing} />
 
 			{selectedTile && board ? (
 				<EditTileSheet
@@ -301,30 +288,35 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 }
 
 const styles = StyleSheet.create({
-	safeArea: { flex: 1, backgroundColor: colors.background },
+	safeArea: { flex: 1, backgroundColor: '#18181b' },
 	center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 },
 	error: { color: colors.danger, fontSize: 16, textAlign: 'center' },
+	// Dark zinc header, matching the web app's page header (bg-zinc-900).
 	header: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		gap: 8,
+		height: 56,
 		paddingHorizontal: 12,
-		paddingVertical: 8,
-		backgroundColor: colors.surface,
-		borderBottomWidth: 1,
-		borderBottomColor: colors.backgroundAlt
+		backgroundColor: '#18181b'
 	},
 	headerButton: {
-		minWidth: 40,
-		height: 40,
-		borderRadius: 10,
+		flexDirection: 'row',
 		alignItems: 'center',
-		justifyContent: 'center',
-		paddingHorizontal: 10,
-		backgroundColor: colors.surface,
+		gap: 8,
+		height: 38,
+		borderRadius: 8,
+		paddingHorizontal: 14,
+		backgroundColor: '#27272a',
 		borderWidth: 1,
-		borderColor: colors.border
+		borderColor: '#3f3f46'
 	},
-	headerTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
-	headerSubtitle: { fontSize: 12, color: colors.textMuted }
+	headerButtonLabel: { color: '#fafafa', fontSize: 14, fontWeight: '500' },
+	headerTitleBlock: {
+		position: 'absolute',
+		left: 0,
+		right: 0,
+		alignItems: 'center'
+	},
+	headerTitle: { fontSize: 16, fontWeight: '400', color: '#fafafa' },
+	headerSubtitle: { fontSize: 11, color: '#a1a1aa' }
 });

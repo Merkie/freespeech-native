@@ -12,6 +12,7 @@ import {
 	View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BottomNav } from '@/components/BottomNav';
 import { Icon } from '@/components/icons/Icon';
 import api from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -207,6 +208,8 @@ export default function SettingsScreen() {
 					</Pressable>
 				</View>
 			</ScrollView>
+
+			<BottomNav />
 		</SafeAreaView>
 	);
 }
