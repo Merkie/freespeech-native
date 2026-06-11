@@ -10,6 +10,7 @@ import {
 	View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Icon } from '@/components/icons/Icon';
 import api from '@/lib/api';
 import { colors } from '@/lib/theme';
 import type { TilePage } from '@/lib/types';
@@ -79,7 +80,7 @@ export function PagesSheet({
 					<View style={styles.headerRow}>
 						<Text style={styles.title}>Pages</Text>
 						<Pressable onPress={onClose} hitSlop={8}>
-							<Text style={styles.close}>✕</Text>
+							<Icon name="x-lg" size={18} color={colors.textMuted} />
 						</Pressable>
 					</View>
 
@@ -114,15 +115,17 @@ export function PagesSheet({
 							return (
 								<View style={[styles.pageRow, isCurrent && { borderColor: colors.primary }]}>
 									<Pressable style={{ flex: 1 }} onPress={() => onNavigate(page.id)}>
-										<Text style={styles.pageName} numberOfLines={1}>
-											{page.name}
-											{isHome ? '  ⌂' : ''}
-										</Text>
+										<View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+											<Text style={styles.pageName} numberOfLines={1}>
+												{page.name}
+											</Text>
+											{isHome ? <Icon name="house-fill" size={14} color={colors.textMuted} /> : null}
+										</View>
 										{isCurrent ? <Text style={styles.pageMeta}>Current page</Text> : null}
 									</Pressable>
 									{!isHome ? (
 										<Pressable onPress={() => handleDelete(page)} hitSlop={8}>
-											<Text style={{ color: colors.danger, fontSize: 18 }}>🗑</Text>
+											<Icon name="trash-fill" size={18} color={colors.danger} />
 										</Pressable>
 									) : null}
 								</View>
@@ -145,7 +148,6 @@ const styles = StyleSheet.create({
 		marginBottom: 6
 	},
 	title: { fontSize: 20, fontWeight: '800', color: colors.text },
-	close: { fontSize: 18, color: colors.textMuted, fontWeight: '600' },
 	input: {
 		backgroundColor: colors.surface,
 		borderWidth: 1,

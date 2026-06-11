@@ -14,6 +14,7 @@ import {
 	useWindowDimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Icon } from '@/components/icons/Icon';
 import { Button, ErrorText, Field } from '@/components/ui';
 import api from '@/lib/api';
 import { mediaUrl } from '@/lib/config';
@@ -59,23 +60,26 @@ export default function ProjectsScreen() {
 				<Text style={styles.title}>Projects</Text>
 				<View style={styles.headerActions}>
 					<Pressable onPress={() => router.push('/settings')} style={styles.headerButton}>
-						<Text style={styles.headerButtonText}>⚙︎</Text>
+						<Icon name="gear" size={19} color={colors.text} />
 					</Pressable>
 					<Pressable onPress={() => setCreating(true)} style={[styles.headerButton, styles.headerButtonPrimary]}>
-						<Text style={[styles.headerButtonText, { color: '#fff' }]}>＋</Text>
+						<Icon name="plus-lg" size={19} color="#fff" />
 					</Pressable>
 				</View>
 			</View>
 
 			{user ? <Text style={styles.welcome}>Signed in as {user.name}</Text> : null}
 
-			<TextInput
-				value={search}
-				onChangeText={setSearch}
-				placeholder="Search projects…"
-				placeholderTextColor={colors.textFaint}
-				style={styles.search}
-			/>
+			<View style={styles.search}>
+				<Icon name="search" size={16} color={colors.textFaint} />
+				<TextInput
+					value={search}
+					onChangeText={setSearch}
+					placeholder="Search projects…"
+					placeholderTextColor={colors.textFaint}
+					style={styles.searchInput}
+				/>
+			</View>
 
 			{!filtered ? (
 				<View style={styles.center}>
@@ -233,9 +237,11 @@ const styles = StyleSheet.create({
 		borderColor: colors.border
 	},
 	headerButtonPrimary: { backgroundColor: colors.primary, borderColor: colors.primary },
-	headerButtonText: { fontSize: 20, color: colors.text },
 	welcome: { paddingHorizontal: 20, paddingTop: 2, color: colors.textMuted, fontSize: 14 },
 	search: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 8,
 		marginHorizontal: 20,
 		marginTop: 12,
 		marginBottom: 4,
@@ -243,8 +249,11 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		borderColor: colors.border,
 		borderRadius: 10,
+		paddingHorizontal: 14
+	},
+	searchInput: {
+		flex: 1,
 		paddingVertical: 10,
-		paddingHorizontal: 14,
 		fontSize: 16,
 		color: colors.text
 	},

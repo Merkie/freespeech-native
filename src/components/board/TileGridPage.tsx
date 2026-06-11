@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Icon } from '@/components/icons/Icon';
 import { colors } from '@/lib/theme';
 import type { Tile } from '@/lib/types';
 import { TileView } from './Tile';
@@ -64,6 +65,7 @@ export function TileGridPage({
 					<TileView
 						tile={tile}
 						height={cellHeight}
+						width={cellWidth}
 						onPress={() => onTilePress(tile)}
 						dimmed={editing && !!selectedTileId && selectedTileId !== tile.id}
 						selected={editing && selectedTileId === tile.id}
@@ -77,7 +79,7 @@ export function TileGridPage({
 					onPress={() => onAddTile(x, y, subpage)}
 					style={({ pressed }) => [styles.addButton, cellStyle(x, y), pressed && { opacity: 0.6 }]}
 				>
-					<Text style={styles.addButtonText}>＋</Text>
+					<Icon name="plus-lg" size={22} color={colors.textFaint} />
 				</Pressable>
 			))}
 		</View>
@@ -92,9 +94,5 @@ const styles = StyleSheet.create({
 		borderColor: colors.textFaint,
 		alignItems: 'center',
 		justifyContent: 'center'
-	},
-	addButtonText: {
-		fontSize: 24,
-		color: colors.textFaint
 	}
 });

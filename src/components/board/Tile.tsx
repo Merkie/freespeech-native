@@ -5,6 +5,7 @@ import type { Tile as TileType } from '@/lib/types';
 export function TileView({
 	tile,
 	height,
+	width,
 	onPress,
 	onLongPress,
 	dimmed = false,
@@ -12,6 +13,7 @@ export function TileView({
 }: {
 	tile: TileType;
 	height: number;
+	width?: number;
 	onPress?: () => void;
 	onLongPress?: () => void;
 	dimmed?: boolean;
@@ -20,9 +22,14 @@ export function TileView({
 	const label = tile.displayText || tile.text;
 	const hasImage = !!tile.image;
 	const textAreaHeight = hasImage ? height * 0.25 : height;
+	// Like the web app, text stays on one line and truncates; size from the
+	// smaller of the cell's dimensions so narrow cells don't wrap mid-word.
+	const widthLimit = width ? width * 0.26 : Number.POSITIVE_INFINITY;
 	const fontSize = Math.max(
 		9,
-		Math.min(hasImage ? Math.floor(textAreaHeight * 0.55) : Math.floor(height * 0.22), 24)
+		Math.floor(
+			Math.min(hasImage ? textAreaHeight * 0.55 : height * 0.22, widthLimit, 24)
+		)
 	);
 
 	return (
@@ -65,7 +72,7 @@ export function TileView({
 					</>
 				) : (
 					<View style={{ flex: 1, justifyContent: 'center' }}>
-						<Text numberOfLines={2} style={[styles.text, { fontSize }]}>
+						<Text numberOfLines={1} style={[styles.text, { fontSize }]}>
 							{label}
 						</Text>
 					</View>

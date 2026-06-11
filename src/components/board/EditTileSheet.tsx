@@ -13,6 +13,7 @@ import {
 	View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Icon } from '@/components/icons/Icon';
 import api from '@/lib/api';
 import { uploadImageFromUrl } from '@/lib/media';
 import { colors, TILE_COLOR_PRESETS } from '@/lib/theme';
@@ -100,13 +101,13 @@ export function EditTileSheet({
 						<View style={styles.headerRow}>
 							<Text style={styles.title}>Edit tile</Text>
 							<Pressable onPress={onClose} hitSlop={8}>
-								<Text style={styles.close}>✕</Text>
+								<Icon name="x-lg" size={18} color={colors.textMuted} />
 							</Pressable>
 						</View>
 
 						<View style={styles.preview}>
 							<View style={{ width: 140, height: 110 }}>
-								<TileView tile={draft} height={110} />
+								<TileView tile={draft} height={110} width={140} />
 							</View>
 						</View>
 
@@ -156,10 +157,12 @@ export function EditTileSheet({
 						<Text style={styles.label}>Image</Text>
 						<View style={{ flexDirection: 'row', gap: 10 }}>
 							<Pressable onPress={() => setView('imageSearch')} style={styles.smallButton}>
+								<Icon name="search" size={14} color={colors.text} />
 								<Text style={styles.smallButtonText}>Search images</Text>
 							</Pressable>
 							{draft.image ? (
 								<Pressable onPress={() => patch({ image: '' })} style={styles.smallButton}>
+									<Icon name="eraser-fill" size={14} color={colors.danger} />
 									<Text style={[styles.smallButtonText, { color: colors.danger }]}>Remove image</Text>
 								</Pressable>
 							) : null}
@@ -190,11 +193,17 @@ export function EditTileSheet({
 							{saving ? (
 								<ActivityIndicator color="#fff" />
 							) : (
-								<Text style={styles.saveButtonText}>Save tile</Text>
+								<View style={styles.buttonRow}>
+									<Icon name="check-lg" size={16} color="#fff" />
+									<Text style={styles.saveButtonText}>Save tile</Text>
+								</View>
 							)}
 						</Pressable>
 						<Pressable onPress={handleDelete} style={styles.deleteButton}>
-							<Text style={styles.deleteButtonText}>Delete tile</Text>
+							<View style={styles.buttonRow}>
+								<Icon name="trash-fill" size={14} color={colors.danger} />
+								<Text style={styles.deleteButtonText}>Delete tile</Text>
+							</View>
 						</Pressable>
 					</ScrollView>
 				)}
@@ -262,8 +271,9 @@ function ImageSearchView({
 	return (
 		<View style={[styles.content, { flex: 1 }]}>
 			<View style={styles.headerRow}>
-				<Pressable onPress={onBack} hitSlop={8}>
-					<Text style={styles.close}>‹ Back</Text>
+				<Pressable onPress={onBack} hitSlop={8} style={styles.buttonRow}>
+					<Icon name="arrow-left" size={16} color={colors.textMuted} />
+					<Text style={styles.close}>Back</Text>
 				</Pressable>
 				<Text style={styles.title}>Find an image</Text>
 				<View style={{ width: 50 }} />
@@ -280,6 +290,7 @@ function ImageSearchView({
 					returnKeyType="search"
 				/>
 				<Pressable onPress={() => search()} style={[styles.smallButton, { justifyContent: 'center' }]}>
+					<Icon name="search" size={14} color={colors.text} />
 					<Text style={styles.smallButtonText}>Search</Text>
 				</Pressable>
 			</View>
@@ -390,6 +401,9 @@ const styles = StyleSheet.create({
 	chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
 	chipText: { color: colors.text, fontSize: 14, fontWeight: '500' },
 	smallButton: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 6,
 		paddingVertical: 10,
 		paddingHorizontal: 14,
 		borderRadius: 10,
@@ -397,6 +411,7 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		borderColor: colors.border
 	},
+	buttonRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 	smallButtonText: { color: colors.text, fontSize: 14, fontWeight: '600' },
 	error: { color: colors.danger, fontSize: 14, marginTop: 6 },
 	saveButton: {

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EditTileSheet } from '@/components/board/EditTileSheet';
+import { Icon } from '@/components/icons/Icon';
 import { PagesSheet } from '@/components/board/PagesSheet';
 import { SentenceBar } from '@/components/board/SentenceBar';
 import { TileGridPage } from '@/components/board/TileGridPage';
@@ -187,7 +188,7 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 		<SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
 			<View style={styles.header}>
 				<Pressable onPress={() => router.replace('/projects')} style={styles.headerButton}>
-					<Text style={styles.headerButtonText}>‹</Text>
+					<Icon name="arrow-left-short" size={28} color={colors.text} />
 				</Pressable>
 
 				<View style={{ flex: 1 }}>
@@ -206,13 +207,13 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 						onPress={() => router.replace(`/project/${projectId}/${board.project.homePageId}`)}
 						style={styles.headerButton}
 					>
-						<Text style={styles.headerButtonText}>⌂</Text>
+						<Icon name="house-fill" size={20} color={colors.text} />
 					</Pressable>
 				) : null}
 
 				{editing ? (
 					<Pressable onPress={() => setPagesSheetOpen(true)} style={styles.headerButton}>
-						<Text style={styles.headerButtonText}>☰</Text>
+						<Icon name="grid-fill" size={18} color={colors.text} />
 					</Pressable>
 				) : null}
 
@@ -220,9 +221,7 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 					onPress={toggleEditing}
 					style={[styles.headerButton, editing && { backgroundColor: colors.primary, borderColor: colors.primary }]}
 				>
-					<Text style={[styles.headerButtonText, editing && { color: '#fff', fontSize: 15, fontWeight: '600' }]}>
-						{editing ? 'Done' : '✎'}
-					</Text>
+					<Icon name={editing ? 'check-lg' : 'pencil-fill'} size={18} color={editing ? '#fff' : colors.text} />
 				</Pressable>
 			</View>
 
@@ -326,7 +325,6 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		borderColor: colors.border
 	},
-	headerButtonText: { fontSize: 20, color: colors.text },
 	headerTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
 	headerSubtitle: { fontSize: 12, color: colors.textMuted }
 });

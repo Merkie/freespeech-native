@@ -1,7 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import api from './api';
-import { setAuthToken } from './api/client';
+import { ApiError, setAuthToken } from './api/client';
 import type { User } from './types';
 
 const TOKEN_KEY = 'freespeech_token';
@@ -33,16 +33,24 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 		(async () => {
 			try {
 				const stored = await SecureStore.getItemAsync(TOKEN_KEY);
-				if (stored) {
-					setAuthToken(stored);
+				if (!stored) return;
+
+				setAuthToken(stored);
+				try {
 					const { user: me } = await api.auth.me();
 					setToken(stored);
 					setUser(me);
+				} catch (e) {
+					if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
+						// Token rejected by the server — sign out for real.
+						setAuthToken(null);
+						await SecureStore.deleteItemAsync(TOKEN_KEY).catch(() => {});
+					} else {
+						// Network hiccup at launch — keep the session; the user
+						// loads lazily once connectivity is back.
+						setToken(stored);
+					}
 				}
-			} catch {
-				// Token invalid or network down at launch — stay signed out.
-				setAuthToken(null);
-				await SecureStore.deleteItemAsync(TOKEN_KEY).catch(() => {});
 			} finally {
 				setLoading(false);
 			}

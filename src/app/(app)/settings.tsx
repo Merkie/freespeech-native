@@ -12,6 +12,7 @@ import {
 	View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Icon } from '@/components/icons/Icon';
 import api from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { useSettings } from '@/lib/settings';
@@ -82,7 +83,7 @@ export default function SettingsScreen() {
 		<SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
 			<View style={styles.header}>
 				<Pressable onPress={() => router.back()} style={styles.headerButton}>
-					<Text style={styles.headerButtonText}>‹</Text>
+					<Icon name="arrow-left-short" size={28} color={colors.text} />
 				</Pressable>
 				<Text style={styles.title}>Settings</Text>
 				<View style={{ width: 40 }} />
@@ -151,7 +152,10 @@ export default function SettingsScreen() {
 						{testing ? (
 							<ActivityIndicator color="#fff" />
 						) : (
-							<Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>🔊 Test voice</Text>
+							<View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+								<Icon name="volume-up" size={18} color="#fff" />
+								<Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>Test voice</Text>
+							</View>
 						)}
 					</Pressable>
 				</View>
@@ -213,7 +217,7 @@ function VoiceRow({ name, selected, onPress }: { name: string; selected: boolean
 			<Text style={[styles.voiceName, selected && { color: colors.primaryDark }]} numberOfLines={1}>
 				{name}
 			</Text>
-			{selected ? <Text style={{ color: colors.primaryDark, fontSize: 16 }}>✓</Text> : null}
+			{selected ? <Icon name="check-lg" size={16} color={colors.primaryDark} /> : null}
 		</Pressable>
 	);
 }
@@ -254,7 +258,6 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		borderColor: colors.border
 	},
-	headerButtonText: { fontSize: 22, color: colors.text },
 	title: { fontSize: 20, fontWeight: '800', color: colors.text },
 	content: { padding: 20, paddingTop: 8, gap: 8, paddingBottom: 48 },
 	sectionTitle: {

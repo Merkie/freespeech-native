@@ -1,6 +1,7 @@
 import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Icon } from '@/components/icons/Icon';
 import { colors } from '@/lib/theme';
 import type { Tile } from '@/lib/types';
 import { TileView } from './Tile';
@@ -38,7 +39,7 @@ export function SentenceBar({
 			>
 				{sentence.map((tile, index) => (
 					<Pressable key={`${tile.id}-${index}`} onPress={() => onRemove(index)} style={styles.sentenceTile}>
-						<TileView tile={tile} height={70} />
+						<TileView tile={tile} height={70} width={100} />
 					</Pressable>
 				))}
 			</ScrollView>
@@ -49,7 +50,15 @@ export function SentenceBar({
 						onPress={handleCopy}
 						style={[styles.actionButton, { backgroundColor: copied ? '#4ade80' : '#22c55e' }]}
 					>
-						<Text style={styles.actionText}>{copied ? '✓' : '⧉'}</Text>
+						{/* Mirrors the web sentence bar: a check appears over the clipboard while "copied". */}
+						<View>
+							<Icon name="clipboard" size={28} color="#fff" />
+							{copied ? (
+								<View style={styles.copiedCheck}>
+									<Icon name="check" size={24} color="#fff" />
+								</View>
+							) : null}
+						</View>
 					</Pressable>
 				) : null}
 
@@ -58,7 +67,7 @@ export function SentenceBar({
 					disabled={synthesizing || sentence.length === 0}
 					style={[styles.actionButton, { backgroundColor: colors.primary }]}
 				>
-					{synthesizing ? <ActivityIndicator color="#fff" /> : <Text style={styles.actionText}>🔊</Text>}
+					{synthesizing ? <ActivityIndicator color="#fff" /> : <Icon name="volume-up-fill" size={30} color="#fff" />}
 				</Pressable>
 
 				<Pressable
@@ -66,7 +75,7 @@ export function SentenceBar({
 					disabled={sentence.length === 0}
 					style={[styles.actionButton, { backgroundColor: colors.danger }]}
 				>
-					<Text style={styles.actionText}>🗑</Text>
+					<Icon name="trash-fill" size={26} color="#fff" />
 				</Pressable>
 			</View>
 		</View>
@@ -103,8 +112,13 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'center'
 	},
-	actionText: {
-		fontSize: 26,
-		color: '#fff'
+	copiedCheck: {
+		position: 'absolute',
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+		alignItems: 'center',
+		justifyContent: 'center'
 	}
 });
