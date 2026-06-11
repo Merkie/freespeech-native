@@ -9,14 +9,16 @@ export async function uploadImageFromUrl(url: string): Promise<string> {
 	const filename = url.split('/').pop()?.split('?')[0] || 'image';
 
 	const response = await api.media.fetchFromUrl(url);
-	const blob = await response.blob();
+	// Not response.blob() — RN stores the body as an ArrayBuffer and can't build a Blob from it.
+	const body = await response.arrayBuffer();
+	const contentType = response.headers.get('content-type');
 
 	const { presignedUrl, key } = await api.media.presignUpload(filename);
 
 	const uploadResponse = await fetch(presignedUrl, {
 		method: 'PUT',
-		headers: blob.type ? { 'Content-Type': blob.type } : undefined,
-		body: blob
+		headers: contentType ? { 'Content-Type': contentType } : undefined,
+		body
 	});
 
 	if (!uploadResponse.ok) throw new Error('Image upload failed');

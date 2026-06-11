@@ -40,38 +40,6 @@ export function joinWordsInSentence(sentence: string) {
 	return result.join(' ');
 }
 
-const BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-function base64ToUint8Array(base64: string): Uint8Array {
-	const clean = base64.replace(/[^A-Za-z0-9+/]/g, '');
-	const byteLength = Math.floor((clean.length * 3) / 4);
-	const bytes = new Uint8Array(byteLength);
-
-	let byteIndex = 0;
-	for (let i = 0; i < clean.length; i += 4) {
-		const c0 = BASE64_CHARS.indexOf(clean[i]);
-		const c1 = BASE64_CHARS.indexOf(clean[i + 1]);
-		const c2 = clean[i + 2] !== undefined ? BASE64_CHARS.indexOf(clean[i + 2]) : -1;
-		const c3 = clean[i + 3] !== undefined ? BASE64_CHARS.indexOf(clean[i + 3]) : -1;
-
-		bytes[byteIndex++] = (c0 << 2) | (c1 >> 4);
-		if (c2 >= 0) bytes[byteIndex++] = ((c1 & 15) << 4) | (c2 >> 2);
-		if (c3 >= 0) bytes[byteIndex++] = ((c2 & 3) << 6) | c3;
-	}
-
-	return bytes;
-}
-
-async function blobToUint8Array(blob: Blob): Promise<Uint8Array> {
-	const dataUrl = await new Promise<string>((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onloadend = () => resolve(reader.result as string);
-		reader.onerror = () => reject(reader.error);
-		reader.readAsDataURL(blob);
-	});
-	return base64ToUint8Array(dataUrl.slice(dataUrl.indexOf(',') + 1));
-}
-
 /**
  * Synthesize via the FreeSpeech API (ElevenLabs) and cache the MP3 on disk.
  * Repeated phrases — the common case in AAC — play instantly from cache.
@@ -87,7 +55,8 @@ async function getElevenLabsAudioFile(text: string, voiceId: string): Promise<Fi
 	if (file.exists) return file;
 
 	const response = await api.tts.speakElevenLabs(text, voiceId);
-	const bytes = await blobToUint8Array(await response.blob());
+	// Not response.blob() — RN stores the body as an ArrayBuffer and can't build a Blob from it.
+	const bytes = new Uint8Array(await response.arrayBuffer());
 
 	dir.create({ intermediates: true, idempotent: true });
 	file.create({ overwrite: true });
@@ -148,8 +117,9 @@ export async function speakText(rawText: string, settings: Settings): Promise<vo
 		});
 
 		player.play();
-	} catch {
+	} catch (e) {
 		// Network/synthesis failure — fall back to on-device speech like the web app.
+		console.warn('[speak] ElevenLabs synthesis failed, using device voice:', e);
 		await speakOffline(text, settings);
 	}
 }
