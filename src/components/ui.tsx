@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import {
 	ActivityIndicator,
 	Pressable,
@@ -9,6 +10,7 @@ import {
 	type TextInputProps,
 	type ViewStyle
 } from 'react-native';
+import { Icon } from '@/components/icons/Icon';
 import { colors } from '@/lib/theme';
 
 export function Button({
@@ -81,6 +83,63 @@ export function ErrorText({ children }: { children: string | null }) {
 	return <Text style={styles.error}>{children}</Text>;
 }
 
+/** Light screen header: optional back button, centered title, optional right action. */
+export function ScreenHeader({
+	title,
+	onBack,
+	right
+}: {
+	title: string;
+	onBack?: () => void;
+	right?: ReactNode;
+}) {
+	return (
+		<View style={styles.screenHeader}>
+			{onBack ? (
+				<Pressable onPress={onBack} style={styles.screenHeaderButton}>
+					<Icon name="arrow-left-short" size={28} color={colors.text} />
+				</Pressable>
+			) : (
+				<View style={{ width: 40 }} />
+			)}
+			<Text style={styles.screenHeaderTitle} numberOfLines={1}>
+				{title}
+			</Text>
+			{right ?? <View style={{ width: 40 }} />}
+		</View>
+	);
+}
+
+/** Modal sheet header: title on the left, close button on the right. */
+export function SheetHeader({ title, onClose }: { title: string; onClose: () => void }) {
+	return (
+		<View style={styles.sheetHeader}>
+			<Text style={styles.sheetTitle}>{title}</Text>
+			<Pressable onPress={onClose} hitSlop={8}>
+				<Icon name="x-lg" size={18} color={colors.textMuted} />
+			</Pressable>
+		</View>
+	);
+}
+
+export function Chip({
+	label,
+	active,
+	onPress
+}: {
+	label: string;
+	active: boolean;
+	onPress: () => void;
+}) {
+	return (
+		<Pressable onPress={onPress} style={[styles.chip, active && styles.chipActive]}>
+			<Text style={[styles.chipText, active && { color: '#fff' }]} numberOfLines={1}>
+				{label}
+			</Text>
+		</Pressable>
+	);
+}
+
 const styles = StyleSheet.create({
 	button: {
 		alignItems: 'center',
@@ -112,5 +171,48 @@ const styles = StyleSheet.create({
 	error: {
 		color: colors.danger,
 		fontSize: 14
-	}
+	},
+	screenHeader: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		height: 56,
+		paddingHorizontal: 12
+	},
+	screenHeaderButton: {
+		width: 40,
+		height: 40,
+		borderRadius: 10,
+		alignItems: 'center',
+		justifyContent: 'center',
+		backgroundColor: colors.surface,
+		borderWidth: 1,
+		borderColor: colors.border
+	},
+	screenHeaderTitle: {
+		flex: 1,
+		textAlign: 'center',
+		fontSize: 20,
+		fontWeight: '800',
+		color: colors.text,
+		paddingHorizontal: 8
+	},
+	sheetHeader: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		marginBottom: 6
+	},
+	sheetTitle: { fontSize: 20, fontWeight: '800', color: colors.text },
+	chip: {
+		paddingVertical: 8,
+		paddingHorizontal: 14,
+		borderRadius: 999,
+		backgroundColor: colors.surface,
+		borderWidth: 1,
+		borderColor: colors.border,
+		maxWidth: 180
+	},
+	chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+	chipText: { color: colors.text, fontSize: 14, fontWeight: '500' }
 });

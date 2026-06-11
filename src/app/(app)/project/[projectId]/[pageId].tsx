@@ -333,8 +333,9 @@ const styles = StyleSheet.create({
 	headerButtonLabel: { color: '#fafafa', fontSize: 14, fontWeight: '500' },
 	headerTitleBlock: {
 		position: 'absolute',
-		left: 0,
-		right: 0,
+		// Inset past the Pages button so a long page name never renders under it.
+		left: 96,
+		right: 96,
 		alignItems: 'center'
 	},
 	headerTitle: { fontSize: 16, fontWeight: '400', color: '#fafafa' },

@@ -11,9 +11,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icons/Icon';
+import { SheetHeader } from '@/components/ui';
 import api from '@/lib/api';
 import { colors } from '@/lib/theme';
 import type { TilePage } from '@/lib/types';
+import { sheetStyles } from './sheet-styles';
 
 export function PagesSheet({
 	visible,
@@ -75,20 +77,15 @@ export function PagesSheet({
 
 	return (
 		<Modal visible={visible} animationType="slide" presentationStyle="formSheet" onRequestClose={onClose}>
-			<SafeAreaView style={styles.sheet} edges={['bottom']}>
-				<View style={styles.content}>
-					<View style={styles.headerRow}>
-						<Text style={styles.title}>Pages</Text>
-						<Pressable onPress={onClose} hitSlop={8}>
-							<Icon name="x-lg" size={18} color={colors.textMuted} />
-						</Pressable>
-					</View>
+			<SafeAreaView style={sheetStyles.sheet} edges={['bottom']}>
+				<View style={[sheetStyles.content, { flex: 1 }]}>
+					<SheetHeader title="Pages" onClose={onClose} />
 
 					<View style={{ flexDirection: 'row', gap: 8 }}>
 						<TextInput
 							value={newPageName}
 							onChangeText={setNewPageName}
-							style={[styles.input, { flex: 1 }]}
+							style={[sheetStyles.input, { flex: 1 }]}
 							placeholder="New page name…"
 							placeholderTextColor={colors.textFaint}
 							onSubmitEditing={handleCreate}
@@ -103,7 +100,7 @@ export function PagesSheet({
 						</Pressable>
 					</View>
 
-					{error ? <Text style={styles.error}>{error}</Text> : null}
+					{error ? <Text style={sheetStyles.error}>{error}</Text> : null}
 
 					<FlatList
 						data={pages}
@@ -139,25 +136,6 @@ export function PagesSheet({
 }
 
 const styles = StyleSheet.create({
-	sheet: { flex: 1, backgroundColor: colors.background },
-	content: { flex: 1, padding: 20, gap: 10 },
-	headerRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		marginBottom: 6
-	},
-	title: { fontSize: 20, fontWeight: '800', color: colors.text },
-	input: {
-		backgroundColor: colors.surface,
-		borderWidth: 1,
-		borderColor: colors.border,
-		borderRadius: 10,
-		paddingVertical: 10,
-		paddingHorizontal: 14,
-		fontSize: 16,
-		color: colors.text
-	},
 	addButton: {
 		backgroundColor: colors.primary,
 		borderRadius: 10,
@@ -165,7 +143,6 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'center'
 	},
-	error: { color: colors.danger, fontSize: 14 },
 	pageRow: {
 		flexDirection: 'row',
 		alignItems: 'center',

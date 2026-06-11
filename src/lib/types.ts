@@ -59,7 +59,9 @@ export type Tile = {
 };
 
 export type ElevenLabsVoice = {
-	id: string;
+	/** The API returns `id` for some voices and ElevenLabs' raw `voice_id` for others. */
+	id?: string;
+	voice_id?: string;
 	name: string;
 	category?: string;
 	labels?: Record<string, string>;

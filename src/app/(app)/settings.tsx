@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icons/Icon';
+import { ScreenHeader } from '@/components/ui';
 import api from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { useSettings } from '@/lib/settings';
@@ -35,10 +36,9 @@ export default function SettingsScreen() {
 			.listVoices()
 			.then(({ voices }) =>
 				setElevenLabsVoices(
-					(voices as any[]).map((voice) => ({
-						id: voice.id ?? voice.voice_id,
-						name: voice.name
-					}))
+					voices
+						.map((voice) => ({ id: voice.id ?? voice.voice_id ?? '', name: voice.name }))
+						.filter((voice) => voice.id)
 				)
 			)
 			.catch(() => setElevenLabsVoices([]));
@@ -47,7 +47,7 @@ export default function SettingsScreen() {
 			.then((voices) =>
 				setDeviceVoices(
 					voices
-						.filter((voice) => voice.language.toLowerCase().startsWith('en'))
+						.filter((voice) => (voice.language ?? '').toLowerCase().startsWith('en'))
 						.map((voice) => ({ id: voice.identifier, name: voice.name }))
 				)
 			)
@@ -81,13 +81,7 @@ export default function SettingsScreen() {
 
 	return (
 		<SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-			<View style={styles.header}>
-				<Pressable onPress={() => router.back()} style={styles.headerButton}>
-					<Icon name="arrow-left-short" size={28} color={colors.text} />
-				</Pressable>
-				<Text style={styles.title}>Settings</Text>
-				<View style={{ width: 40 }} />
-			</View>
+			<ScreenHeader title="Settings" onBack={() => router.back()} />
 
 			<ScrollView contentContainerStyle={styles.content}>
 				<Text style={styles.sectionTitle}>Voice</Text>
@@ -117,35 +111,20 @@ export default function SettingsScreen() {
 						) : elevenLabsVoices.length === 0 ? (
 							<Text style={styles.muted}>{"Couldn't load AI voices right now."}</Text>
 						) : (
-							<View style={styles.voiceList}>
-								{elevenLabsVoices.map((voice) => (
-									<VoiceRow
-										key={voice.id}
-										name={voice.name}
-										selected={settings.elevenLabsVoiceId === voice.id}
-										onPress={() =>
-											updateSettings({ elevenLabsVoiceId: voice.id, elevenLabsVoiceName: voice.name })
-										}
-									/>
-								))}
-							</View>
+							<VoiceList
+								voices={elevenLabsVoices}
+								selectedId={settings.elevenLabsVoiceId}
+								onSelect={(voice) =>
+									updateSettings({ elevenLabsVoiceId: voice.id, elevenLabsVoiceName: voice.name })
+								}
+							/>
 						)
 					) : (
-						<View style={styles.voiceList}>
-							<VoiceRow
-								name="System default"
-								selected={!settings.offlineVoiceId}
-								onPress={() => updateSettings({ offlineVoiceId: null })}
-							/>
-							{deviceVoices.map((voice) => (
-								<VoiceRow
-									key={voice.id}
-									name={voice.name}
-									selected={settings.offlineVoiceId === voice.id}
-									onPress={() => updateSettings({ offlineVoiceId: voice.id })}
-								/>
-							))}
-						</View>
+						<VoiceList
+							voices={[{ id: '', name: 'System default' }, ...deviceVoices]}
+							selectedId={settings.offlineVoiceId ?? ''}
+							onSelect={(voice) => updateSettings({ offlineVoiceId: voice.id || null })}
+						/>
 					)}
 
 					<Pressable onPress={testVoice} disabled={testing} style={styles.testButton}>
@@ -211,6 +190,34 @@ export default function SettingsScreen() {
 	);
 }
 
+/**
+ * Scrollable voice picker. Must be a ScrollView (which clips by default), not a
+ * capped View — RN doesn't clip overflow, so a long list would paint over the
+ * sections below it without contributing to the page's scroll height.
+ */
+function VoiceList({
+	voices,
+	selectedId,
+	onSelect
+}: {
+	voices: VoiceOption[];
+	selectedId: string | null;
+	onSelect: (voice: VoiceOption) => void;
+}) {
+	return (
+		<ScrollView style={styles.voiceList} contentContainerStyle={{ gap: 8 }} nestedScrollEnabled>
+			{voices.map((voice) => (
+				<VoiceRow
+					key={voice.id || 'default'}
+					name={voice.name}
+					selected={selectedId === voice.id}
+					onPress={() => onSelect(voice)}
+				/>
+			))}
+		</ScrollView>
+	);
+}
+
 function VoiceRow({ name, selected, onPress }: { name: string; selected: boolean; onPress: () => void }) {
 	return (
 		<Pressable onPress={onPress} style={[styles.voiceRow, selected && { borderColor: colors.primary }]}>
@@ -241,24 +248,6 @@ function ToggleRow({
 
 const styles = StyleSheet.create({
 	safeArea: { flex: 1, backgroundColor: colors.background },
-	header: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		paddingHorizontal: 12,
-		paddingVertical: 8
-	},
-	headerButton: {
-		width: 40,
-		height: 40,
-		borderRadius: 10,
-		alignItems: 'center',
-		justifyContent: 'center',
-		backgroundColor: colors.surface,
-		borderWidth: 1,
-		borderColor: colors.border
-	},
-	title: { fontSize: 20, fontWeight: '800', color: colors.text },
 	content: { padding: 20, paddingTop: 8, gap: 8, paddingBottom: 48 },
 	sectionTitle: {
 		fontSize: 14,
@@ -290,7 +279,7 @@ const styles = StyleSheet.create({
 	},
 	segmentActive: { backgroundColor: colors.primary },
 	segmentText: { fontSize: 15, fontWeight: '600', color: colors.text },
-	voiceList: { gap: 8, maxHeight: 320 },
+	voiceList: { maxHeight: 320 },
 	voiceRow: {
 		flexDirection: 'row',
 		alignItems: 'center',

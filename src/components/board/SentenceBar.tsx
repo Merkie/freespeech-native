@@ -1,5 +1,5 @@
 import * as Clipboard from 'expo-clipboard';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Icon } from '@/components/icons/Icon';
 import { colors } from '@/lib/theme';
@@ -22,11 +22,15 @@ export function SentenceBar({
 	onClear: () => void;
 }) {
 	const [copied, setCopied] = useState(false);
+	const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	useEffect(() => () => clearTimeout(copiedTimer.current ?? undefined), []);
 
 	const handleCopy = async () => {
 		await Clipboard.setStringAsync(sentence.map((tile) => tile.text).join(' '));
 		setCopied(true);
-		setTimeout(() => setCopied(false), 2000);
+		if (copiedTimer.current) clearTimeout(copiedTimer.current);
+		copiedTimer.current = setTimeout(() => setCopied(false), 2000);
 	};
 
 	return (
