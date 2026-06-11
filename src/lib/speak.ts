@@ -40,6 +40,33 @@ export function joinWordsInSentence(sentence: string) {
 	return result.join(' ');
 }
 
+const TTS_CACHE_LIMIT_BYTES = 50 * 1024 * 1024;
+
+/**
+ * Best-effort trim of the on-disk TTS cache back to its size cap, oldest
+ * clips first. Run once at app launch.
+ */
+export function pruneTtsCache() {
+	try {
+		const dir = new Directory(Paths.cache, 'tts');
+		if (!dir.exists) return;
+
+		const files = dir.list().filter((entry): entry is File => entry instanceof File);
+		let total = files.reduce((sum, file) => sum + file.size, 0);
+		if (total <= TTS_CACHE_LIMIT_BYTES) return;
+
+		const oldestFirst = [...files].sort((a, b) => (a.lastModified ?? 0) - (b.lastModified ?? 0));
+		for (const file of oldestFirst) {
+			if (total <= TTS_CACHE_LIMIT_BYTES) break;
+			total -= file.size;
+			file.delete();
+		}
+	} catch (e) {
+		// Pruning must never block the app; evicted-anyway is the OS's fallback.
+		console.warn('[speak] Failed to prune TTS cache:', e);
+	}
+}
+
 /**
  * Synthesize via the FreeSpeech API (ElevenLabs) and cache the MP3 on disk.
  * Repeated phrases — the common case in AAC — play instantly from cache.
