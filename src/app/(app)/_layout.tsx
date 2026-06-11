@@ -1,9 +1,9 @@
-import { Redirect } from 'expo-router';
+import { Redirect, Stack } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 import { useSession } from '@/lib/session';
 import { colors } from '@/lib/theme';
 
-export default function Index() {
+export default function AppLayout() {
 	const { token, loading } = useSession();
 
 	if (loading) {
@@ -14,5 +14,9 @@ export default function Index() {
 		);
 	}
 
-	return <Redirect href={token ? '/projects' : '/login'} />;
+	if (!token) {
+		return <Redirect href="/login" />;
+	}
+
+	return <Stack screenOptions={{ headerShown: false }} />;
 }
