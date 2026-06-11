@@ -2,36 +2,45 @@ import { router, usePathname } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icons/Icon';
+import { useBoardUi } from '@/lib/board-ui';
 import { useSettings } from '@/lib/settings';
 
 /**
  * The persistent three-button bar from the web app (BottomNavigation.svelte):
  * house = current project's home page, pencil = edit mode, gear = dashboard.
- * Board screens pass `editing`/`onToggleEdit`/`onExitEdit`; dashboard screens
- * render it bare, which leaves the pencil disabled like the web app.
+ * Rendered once in the (app) layout, outside the navigation stack, so it
+ * never animates with page transitions. Board screens register their edit
+ * state via BoardUiContext; with no board mounted the pencil is disabled,
+ * like the web app on dashboard routes.
  */
-export function BottomNav({
-	editing = false,
-	onToggleEdit,
-	onExitEdit
-}: {
-	editing?: boolean;
-	onToggleEdit?: () => void;
-	onExitEdit?: () => void;
-}) {
+export function BottomNav() {
 	const { settings } = useSettings();
+	const { boardUi } = useBoardUi();
 	const pathname = usePathname();
 	const insets = useSafeAreaInsets();
 
-	const onDashboard = pathname.startsWith('/projects') || pathname.startsWith('/settings');
-	const onBoard = !onDashboard;
+	const onBoard = boardUi !== null;
+	const editing = boardUi?.editing ?? false;
 
 	const goHome = () => {
-		if (editing) onExitEdit?.();
-		if (settings.lastVisitedProjectId) {
-			// The project root resolves to its home page.
+		if (boardUi) {
+			if (boardUi.editing) boardUi.exitEditing();
+			if (!boardUi.homePageId) return;
+			const target = `/project/${boardUi.projectId}/${boardUi.homePageId}` as const;
+			if (pathname !== target) router.replace(target);
+			return;
+		}
+		if (!settings.lastVisitedProjectId) return;
+		if (settings.lastVisitedHomePageId) {
+			router.replace(`/project/${settings.lastVisitedProjectId}/${settings.lastVisitedHomePageId}`);
+		} else {
+			// No cached home page — go through the project resolver.
 			router.replace(`/project/${settings.lastVisitedProjectId}`);
 		}
+	};
+
+	const goDashboard = () => {
+		if (pathname !== '/projects') router.replace('/projects');
 	};
 
 	return (
@@ -39,21 +48,16 @@ export function BottomNav({
 			<NavButton
 				icon="house-fill"
 				active={onBoard && !editing}
-				disabled={!settings.lastVisitedProjectId}
+				disabled={!onBoard && !settings.lastVisitedProjectId}
 				onPress={goHome}
 			/>
 			<NavButton
 				icon="pencil-fill"
 				active={onBoard && editing}
-				disabled={!onToggleEdit}
-				onPress={() => onToggleEdit?.()}
+				disabled={!boardUi}
+				onPress={() => boardUi?.toggleEditing()}
 			/>
-			<NavButton
-				icon="gear-fill"
-				active={onDashboard}
-				disabled={editing}
-				onPress={() => router.replace('/projects')}
-			/>
+			<NavButton icon="gear-fill" active={!onBoard} disabled={editing} onPress={goDashboard} />
 		</View>
 	);
 }

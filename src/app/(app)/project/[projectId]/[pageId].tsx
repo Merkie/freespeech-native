@@ -10,7 +10,6 @@ import {
 	View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BottomNav } from '@/components/BottomNav';
 import { EditTileSheet } from '@/components/board/EditTileSheet';
 import { Icon } from '@/components/icons/Icon';
 import { PagesSheet } from '@/components/board/PagesSheet';
@@ -18,6 +17,7 @@ import { SentenceBar } from '@/components/board/SentenceBar';
 import { TileGridPage } from '@/components/board/TileGridPage';
 import { Button } from '@/components/ui';
 import api from '@/lib/api';
+import { useBoardUi } from '@/lib/board-ui';
 import { useSettings } from '@/lib/settings';
 import { speakText } from '@/lib/speak';
 import { colors } from '@/lib/theme';
@@ -38,6 +38,7 @@ export default function BoardScreen() {
 
 function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 	const { settings, updateSettings } = useSettings();
+	const { setBoardUi } = useBoardUi();
 
 	const [board, setBoard] = useState<BoardData | null>(null);
 	const [error, setError] = useState<string | null>(null);
@@ -68,8 +69,13 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 	}, [loadBoard]);
 
 	useEffect(() => {
-		updateSettings({ lastVisitedProjectId: projectId, lastVisitedPageId: pageId });
-	}, [projectId, pageId, updateSettings]);
+		if (!board) return;
+		updateSettings({
+			lastVisitedProjectId: projectId,
+			lastVisitedPageId: pageId,
+			lastVisitedHomePageId: board.project.homePageId
+		});
+	}, [board, projectId, pageId, updateSettings]);
 
 	// Load the project's pages when entering edit mode (for navigation links + pages sheet).
 	useEffect(() => {
@@ -175,7 +181,23 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 		setEditing(false);
 	}, [board?.isHomePage, projectId]);
 
-	const toggleEditing = () => (editing ? exitEditing() : setEditing(true));
+	const toggleEditing = useCallback(
+		() => (editing ? exitEditing() : setEditing(true)),
+		[editing, exitEditing]
+	);
+
+	// Register edit state with the layout-level bottom nav while this board is mounted.
+	useEffect(() => {
+		setBoardUi({
+			projectId,
+			homePageId: board?.project.homePageId ?? null,
+			editing,
+			toggleEditing,
+			exitEditing
+		});
+	}, [setBoardUi, projectId, board?.project.homePageId, editing, toggleEditing, exitEditing]);
+
+	useEffect(() => () => setBoardUi(null), [setBoardUi]);
 
 	if (error) {
 		return (
@@ -252,8 +274,6 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 					</ScrollView>
 				)}
 			</View>
-
-			<BottomNav editing={editing} onToggleEdit={toggleEditing} onExitEdit={exitEditing} />
 
 			{selectedTile && board ? (
 				<EditTileSheet

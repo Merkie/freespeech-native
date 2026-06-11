@@ -15,6 +15,8 @@ export type Settings = {
 	skinTone: SkinTone;
 	lastVisitedProjectId: string | null;
 	lastVisitedPageId: string | null;
+	/** Home page of the last visited project, so the nav's house button can jump straight to it. */
+	lastVisitedHomePageId: string | null;
 };
 
 const DEFAULT_SETTINGS: Settings = {
@@ -27,7 +29,8 @@ const DEFAULT_SETTINGS: Settings = {
 	sentenceCopyButton: false,
 	skinTone: 'medium',
 	lastVisitedProjectId: null,
-	lastVisitedPageId: null
+	lastVisitedPageId: null,
+	lastVisitedHomePageId: null
 };
 
 type SettingsContextValue = {

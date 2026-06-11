@@ -1,5 +1,7 @@
 import { Redirect, Stack } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
+import { BottomNav } from '@/components/BottomNav';
+import { BoardUiProvider } from '@/lib/board-ui';
 import { useSession } from '@/lib/session';
 import { colors } from '@/lib/theme';
 
@@ -18,5 +20,16 @@ export default function AppLayout() {
 		return <Redirect href="/login" />;
 	}
 
-	return <Stack screenOptions={{ headerShown: false }} />;
+	// The nav bar lives outside the Stack so page transitions never move it,
+	// and screens switch instantly like the web app.
+	return (
+		<BoardUiProvider>
+			<View style={{ flex: 1 }}>
+				<View style={{ flex: 1 }}>
+					<Stack screenOptions={{ headerShown: false, animation: 'none' }} />
+				</View>
+				<BottomNav />
+			</View>
+		</BoardUiProvider>
+	);
 }

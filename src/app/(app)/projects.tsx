@@ -14,7 +14,6 @@ import {
 	useWindowDimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BottomNav } from '@/components/BottomNav';
 import { Icon } from '@/components/icons/Icon';
 import { Button, ErrorText, Field } from '@/components/ui';
 import api from '@/lib/api';
@@ -113,8 +112,6 @@ export default function ProjectsScreen() {
 					renderItem={({ item }) => <ProjectCard project={item} />}
 				/>
 			)}
-
-			<BottomNav />
 
 			<CreateProjectModal
 				visible={creating}
