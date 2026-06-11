@@ -1,25 +1,20 @@
 import { useState } from 'react';
-import {
-	Alert,
-	FlatList,
-	Modal,
-	Pressable,
-	StyleSheet,
-	Text,
-	TextInput,
-	View
-} from 'react-native';
+import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icons/Icon';
 import { SheetHeader } from '@/components/ui';
 import api from '@/lib/api';
 import { colors } from '@/lib/theme';
 import type { TilePage } from '@/lib/types';
+import { PageNameModal } from './PageNameModal';
 import { sheetStyles } from './sheet-styles';
 
+/**
+ * The web app's "View All Pages" modal: rows navigate, non-home pages can be
+ * renamed or deleted. Page creation lives in the Page Actions dropdown.
+ */
 export function PagesSheet({
 	visible,
-	projectId,
 	currentPageId,
 	homePageId,
 	pages,
@@ -28,7 +23,6 @@ export function PagesSheet({
 	onClose
 }: {
 	visible: boolean;
-	projectId: string;
 	currentPageId: string;
 	homePageId: string | null;
 	pages: TilePage[];
@@ -36,25 +30,14 @@ export function PagesSheet({
 	onNavigate: (pageId: string) => void;
 	onClose: () => void;
 }) {
-	const [newPageName, setNewPageName] = useState('');
+	const [renaming, setRenaming] = useState<TilePage | null>(null);
 	const [error, setError] = useState<string | null>(null);
-	const [creating, setCreating] = useState(false);
 
-	const handleCreate = async () => {
-		const name = newPageName.trim();
-		if (!name) return;
-		setCreating(true);
-		setError(null);
-		try {
-			await api.page.create({ name, projectId });
-			const { pages: refreshed } = await api.project.listPages(projectId);
-			onPagesChanged(refreshed);
-			setNewPageName('');
-		} catch (e) {
-			setError(e instanceof Error ? e.message : 'Failed to create page.');
-		} finally {
-			setCreating(false);
-		}
+	const handleRename = async (name: string) => {
+		if (!renaming) return;
+		await api.page.update(renaming.id, { name });
+		onPagesChanged(pages.map((p) => (p.id === renaming.id ? { ...p, name } : p)));
+		setRenaming(null);
 	};
 
 	const handleDelete = (page: TilePage) => {
@@ -81,25 +64,6 @@ export function PagesSheet({
 				<View style={[sheetStyles.content, { flex: 1 }]}>
 					<SheetHeader title="Pages" onClose={onClose} />
 
-					<View style={{ flexDirection: 'row', gap: 8 }}>
-						<TextInput
-							value={newPageName}
-							onChangeText={setNewPageName}
-							style={[sheetStyles.input, { flex: 1 }]}
-							placeholder="New page name…"
-							placeholderTextColor={colors.textFaint}
-							onSubmitEditing={handleCreate}
-							maxLength={50}
-						/>
-						<Pressable
-							onPress={handleCreate}
-							disabled={creating || !newPageName.trim()}
-							style={[styles.addButton, (creating || !newPageName.trim()) && { opacity: 0.5 }]}
-						>
-							<Text style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>Add</Text>
-						</Pressable>
-					</View>
-
 					{error ? <Text style={sheetStyles.error}>{error}</Text> : null}
 
 					<FlatList
@@ -121,28 +85,36 @@ export function PagesSheet({
 										{isCurrent ? <Text style={styles.pageMeta}>Current page</Text> : null}
 									</Pressable>
 									{!isHome ? (
-										<Pressable onPress={() => handleDelete(page)} hitSlop={8}>
-											<Icon name="trash-fill" size={18} color={colors.danger} />
-										</Pressable>
+										<>
+											<Pressable onPress={() => setRenaming(page)} hitSlop={8}>
+												<Icon name="pencil" size={16} color={colors.textMuted} />
+											</Pressable>
+											<Pressable onPress={() => handleDelete(page)} hitSlop={8}>
+												<Icon name="trash-fill" size={18} color={colors.danger} />
+											</Pressable>
+										</>
 									) : null}
 								</View>
 							);
 						}}
 					/>
 				</View>
+
+				{renaming ? (
+					<PageNameModal
+						title="Edit Page"
+						initialName={renaming.name}
+						submitLabel="Submit Edits"
+						onSubmit={handleRename}
+						onClose={() => setRenaming(null)}
+					/>
+				) : null}
 			</SafeAreaView>
 		</Modal>
 	);
 }
 
 const styles = StyleSheet.create({
-	addButton: {
-		backgroundColor: colors.primary,
-		borderRadius: 10,
-		paddingHorizontal: 18,
-		alignItems: 'center',
-		justifyContent: 'center'
-	},
 	pageRow: {
 		flexDirection: 'row',
 		alignItems: 'center',

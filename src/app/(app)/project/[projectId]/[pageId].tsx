@@ -9,9 +9,10 @@ import {
 	Text,
 	View
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EditTileSheet } from '@/components/board/EditTileSheet';
 import { Icon } from '@/components/icons/Icon';
+import { PageNameModal } from '@/components/board/PageNameModal';
 import { PagesSheet } from '@/components/board/PagesSheet';
 import { SentenceBar } from '@/components/board/SentenceBar';
 import { TileGridPage } from '@/components/board/TileGridPage';
@@ -39,6 +40,7 @@ export default function BoardScreen() {
 function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 	const { settings, updateSettings } = useSettings();
 	const { setBoardUi } = useBoardUi();
+	const insets = useSafeAreaInsets();
 
 	const [board, setBoard] = useState<BoardData | null>(null);
 	const [error, setError] = useState<string | null>(null);
@@ -48,6 +50,8 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 	const [selectedTile, setSelectedTile] = useState<Tile | null>(null);
 	const [projectPages, setProjectPages] = useState<TilePage[]>([]);
 	const [pagesSheetOpen, setPagesSheetOpen] = useState(false);
+	const [pageActionsOpen, setPageActionsOpen] = useState(false);
+	const [pageModal, setPageModal] = useState<'rename' | 'create' | null>(null);
 	const [gridSize, setGridSize] = useState<{ width: number; height: number } | null>(null);
 
 	const editedRef = useRef(false);
@@ -158,6 +162,23 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 		setSelectedTile(null);
 	};
 
+	const handleRenamePage = async (name: string) => {
+		if (!board) return;
+		await api.page.update(board.page.id, { name });
+		setBoard((prev) => (prev ? { ...prev, page: { ...prev.page, name } } : prev));
+		setProjectPages((prev) => prev.map((p) => (p.id === board.page.id ? { ...p, name } : p)));
+		setPageModal(null);
+	};
+
+	const handleCreatePage = async (name: string) => {
+		await api.page.create({ name, projectId });
+		const { pages } = await api.project.listPages(projectId);
+		setProjectPages(pages);
+		setPageModal(null);
+		// Like the web app: after creating, show the pages list.
+		setPagesSheetOpen(true);
+	};
+
 	const handleTileDeleted = (tileId: string) => {
 		editedRef.current = true;
 		setBoard((prev) =>
@@ -214,9 +235,9 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 			<View style={styles.header}>
 				{/* Mirrors the web page header: title centered, page actions on the left while editing. */}
 				{editing ? (
-					<Pressable onPress={() => setPagesSheetOpen(true)} style={styles.headerButton}>
+					<Pressable onPress={() => setPageActionsOpen(true)} style={styles.headerButton}>
 						<Icon name="grid-fill" size={16} color="#fafafa" />
-						<Text style={styles.headerButtonLabel}>Pages</Text>
+						<Text style={styles.headerButtonLabel}>Page Actions</Text>
 					</Pressable>
 				) : null}
 
@@ -290,11 +311,19 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 			{board && projectId ? (
 				<PagesSheet
 					visible={pagesSheetOpen}
-					projectId={projectId}
 					currentPageId={board.page.id}
 					homePageId={board.project.homePageId}
 					pages={projectPages}
-					onPagesChanged={setProjectPages}
+					onPagesChanged={(pages) => {
+						setProjectPages(pages);
+						// A rename in the sheet may target the page we're on — keep the header in sync.
+						const current = pages.find((p) => p.id === board.page.id);
+						if (current && current.name !== board.page.name) {
+							setBoard((prev) =>
+								prev ? { ...prev, page: { ...prev.page, name: current.name } } : prev
+							);
+						}
+					}}
 					onClose={() => setPagesSheetOpen(false)}
 					onNavigate={(toPageId) => {
 						setPagesSheetOpen(false);
@@ -303,7 +332,72 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 					}}
 				/>
 			) : null}
+
+			{/* The web header's "Page Actions" dropdown, anchored under the button. */}
+			{pageActionsOpen && board ? (
+				<>
+					<Pressable style={StyleSheet.absoluteFill} onPress={() => setPageActionsOpen(false)} />
+					<View style={[styles.actionsMenu, { top: insets.top + 54 }]}>
+						<PageActionItem
+							icon="pencil"
+							label={`Edit "${board.page.name}"`}
+							onPress={() => {
+								setPageActionsOpen(false);
+								setPageModal('rename');
+							}}
+						/>
+						<View style={styles.actionsDivider} />
+						<PageActionItem
+							icon="plus-lg"
+							label="Add New Page"
+							onPress={() => {
+								setPageActionsOpen(false);
+								setPageModal('create');
+							}}
+						/>
+						<View style={styles.actionsDivider} />
+						<PageActionItem
+							icon="grid"
+							label="View All Pages"
+							onPress={() => {
+								setPageActionsOpen(false);
+								setPagesSheetOpen(true);
+							}}
+						/>
+					</View>
+				</>
+			) : null}
+
+			{pageModal && board ? (
+				<PageNameModal
+					title={pageModal === 'rename' ? 'Edit Page' : 'Create Page'}
+					initialName={pageModal === 'rename' ? board.page.name : ''}
+					submitLabel={pageModal === 'rename' ? 'Submit Edits' : 'Submit'}
+					onSubmit={pageModal === 'rename' ? handleRenamePage : handleCreatePage}
+					onClose={() => setPageModal(null)}
+				/>
+			) : null}
 		</SafeAreaView>
+	);
+}
+
+function PageActionItem({
+	icon,
+	label,
+	onPress
+}: {
+	icon: 'pencil' | 'plus-lg' | 'grid';
+	label: string;
+	onPress: () => void;
+}) {
+	return (
+		<Pressable
+			onPress={onPress}
+			style={({ pressed }) => [styles.actionsItem, pressed && { backgroundColor: 'rgba(63,63,70,0.5)' }]}
+		>
+			<Icon name={icon} size={14} color="#fafafa" />
+			<Text style={styles.actionsItemLabel}>{label}</Text>
+		</Pressable>
 	);
 }
 
@@ -339,5 +433,30 @@ const styles = StyleSheet.create({
 		alignItems: 'center'
 	},
 	headerTitle: { fontSize: 16, fontWeight: '400', color: '#fafafa' },
-	headerSubtitle: { fontSize: 11, color: '#a1a1aa' }
+	headerSubtitle: { fontSize: 11, color: '#a1a1aa' },
+	// Dropdown matching the web's Page Actions menu (zinc-800 on zinc-700 border).
+	actionsMenu: {
+		position: 'absolute',
+		left: 12,
+		backgroundColor: '#27272a',
+		borderWidth: 1,
+		borderColor: '#3f3f46',
+		borderRadius: 8,
+		padding: 8,
+		shadowColor: '#000',
+		shadowOpacity: 0.3,
+		shadowRadius: 12,
+		shadowOffset: { width: 0, height: 6 },
+		elevation: 8
+	},
+	actionsItem: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 10,
+		paddingVertical: 10,
+		paddingHorizontal: 14,
+		borderRadius: 8
+	},
+	actionsItemLabel: { color: '#fafafa', fontSize: 15 },
+	actionsDivider: { height: 1, backgroundColor: 'rgba(63,63,70,0.4)' }
 });
