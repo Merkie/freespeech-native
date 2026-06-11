@@ -215,7 +215,7 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 				{/* Mirrors the web page header: title centered, page actions on the left while editing. */}
 				{editing ? (
 					<Pressable onPress={() => setPagesSheetOpen(true)} style={styles.headerButton}>
-						<Icon name="grid-fill" size={16} color={colors.text} />
+						<Icon name="grid-fill" size={16} color="#fafafa" />
 						<Text style={styles.headerButtonLabel}>Pages</Text>
 					</Pressable>
 				) : null}
