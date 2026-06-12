@@ -76,7 +76,7 @@ export default function ProjectsScreen() {
 				{/* Web SearchBar: search input + Create New Project in one bordered row. */}
 				<View style={styles.searchRow}>
 					<View style={styles.search}>
-						<Icon name="search" size={14} color={colors.text} />
+						<Icon name="search" size={16} color={colors.text} />
 						<TextInput
 							value={search}
 							onChangeText={setSearch}
@@ -86,7 +86,7 @@ export default function ProjectsScreen() {
 						/>
 					</View>
 					<Pressable onPress={() => setCreating(true)} style={styles.createButton}>
-						<Icon name="plus-lg" size={14} color="#eff6ff" />
+						<Icon name="plus-lg" size={16} color="#eff6ff" />
 						<Text style={styles.createButtonText}>Create New Project</Text>
 					</Pressable>
 				</View>
@@ -281,22 +281,22 @@ const styles = StyleSheet.create({
 	},
 	searchInput: {
 		flex: 1,
-		paddingVertical: 4,
-		fontSize: 14,
+		paddingVertical: 8,
+		fontSize: 16,
 		color: colors.text
 	},
 	createButton: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		gap: 6,
+		gap: 8,
 		backgroundColor: '#2563eb',
 		borderWidth: 1,
 		borderColor: '#3b82f6',
 		borderRadius: 6,
-		paddingVertical: 8,
-		paddingHorizontal: 16
+		paddingVertical: 10,
+		paddingHorizontal: 18
 	},
-	createButtonText: { color: '#eff6ff', fontSize: 13 },
+	createButtonText: { color: '#eff6ff', fontSize: 15 },
 	center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
 	emptyTitle: { fontSize: 20, fontWeight: '700', color: colors.text },
 	emptyText: { fontSize: 15, color: colors.textMuted, marginTop: 4, textAlign: 'center' },
