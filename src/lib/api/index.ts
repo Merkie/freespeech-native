@@ -117,6 +117,12 @@ const media = {
 		fetchFromAPI<{ presignedUrl: string; key: string }>('/media/upload/presign', {
 			method: 'POST',
 			body: { filename }
+		}),
+
+	removeBackground: (imageUrl: string) =>
+		fetchFromAPI<{ image_url: string }>('/media/remove-background', {
+			method: 'POST',
+			body: { image_url: imageUrl }
 		})
 };
 

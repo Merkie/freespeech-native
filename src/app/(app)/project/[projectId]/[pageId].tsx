@@ -10,7 +10,7 @@ import {
 	View
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { EditTileSheet } from '@/components/board/EditTileSheet';
+import { EditTilePanel } from '@/components/board/EditTilePanel';
 import { Icon } from '@/components/icons/Icon';
 import { PageNameModal } from '@/components/board/PageNameModal';
 import { PagesSheet } from '@/components/board/PagesSheet';
@@ -159,7 +159,8 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 					}
 				: prev
 		);
-		setSelectedTile(null);
+		// Like the web app, the panel stays open after saving.
+		setSelectedTile({ ...tile });
 	};
 
 	const handleRenamePage = async (name: string) => {
@@ -245,11 +246,6 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 					<Text style={styles.headerTitle} numberOfLines={1}>
 						{board?.page.name ?? '…'}
 					</Text>
-					{board ? (
-						<Text style={styles.headerSubtitle} numberOfLines={1}>
-							{board.project.name}
-						</Text>
-					) : null}
 				</View>
 			</View>
 
@@ -264,49 +260,50 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 				/>
 			) : null}
 
-			<View
-				style={{ flex: 1, backgroundColor: colors.background }}
-				onLayout={(e) => {
-					const { width, height } = e.nativeEvent.layout;
-					setGridSize({ width, height });
-				}}
-			>
-				{!board || !gridSize ? (
-					<View style={styles.center}>
-						<ActivityIndicator size="large" color={colors.primary} />
-					</View>
-				) : (
-					<ScrollView pagingEnabled showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
-						{subpages.map((tiles, subpage) => (
-							<TileGridPage
-								key={subpage}
-								tiles={tiles}
-								columns={board.project.columns}
-								rows={board.project.rows}
-								width={gridSize.width}
-								height={gridSize.height}
-								subpage={subpage}
-								editing={editing}
-								selectedTileId={selectedTile?.id ?? null}
-								onTilePress={handleTilePress}
-								onAddTile={handleAddTile}
-							/>
-						))}
-					</ScrollView>
-				)}
-			</View>
+			<View style={{ flex: 1, flexDirection: 'row' }}>
+				<View
+					style={{ flex: 1, backgroundColor: colors.background }}
+					onLayout={(e) => {
+						const { width, height } = e.nativeEvent.layout;
+						setGridSize({ width, height });
+					}}
+				>
+					{!board || !gridSize ? (
+						<View style={styles.center}>
+							<ActivityIndicator size="large" color={colors.primary} />
+						</View>
+					) : (
+						<ScrollView pagingEnabled showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+							{subpages.map((tiles, subpage) => (
+								<TileGridPage
+									key={subpage}
+									tiles={tiles}
+									columns={board.project.columns}
+									rows={board.project.rows}
+									width={gridSize.width}
+									height={gridSize.height}
+									subpage={subpage}
+									editing={editing}
+									selectedTileId={selectedTile?.id ?? null}
+									onTilePress={handleTilePress}
+									onAddTile={handleAddTile}
+								/>
+							))}
+						</ScrollView>
+					)}
+				</View>
 
-			{selectedTile && board ? (
-				<EditTileSheet
-					key={selectedTile.id}
-					tile={selectedTile}
-					pages={projectPages}
-					skinTone={settings.skinTone}
-					onSave={handleTileSaved}
-					onDelete={handleTileDeleted}
-					onClose={() => setSelectedTile(null)}
-				/>
-			) : null}
+				{/* The web app's right-docked tile editor — the grid shrinks while it's open. */}
+				{selectedTile && board ? (
+					<EditTilePanel
+						key={selectedTile.id}
+						tile={selectedTile}
+						pages={projectPages}
+						onSave={handleTileSaved}
+						onDelete={handleTileDeleted}
+					/>
+				) : null}
+			</View>
 
 			{board && projectId ? (
 				<PagesSheet
@@ -432,8 +429,8 @@ const styles = StyleSheet.create({
 		right: 96,
 		alignItems: 'center'
 	},
-	headerTitle: { fontSize: 16, fontWeight: '400', color: '#fafafa' },
-	headerSubtitle: { fontSize: 11, color: '#a1a1aa' },
+	// Web PageHeader: font-light, page name only.
+	headerTitle: { fontSize: 16, fontWeight: '300', color: '#fafafa' },
 	// Dropdown matching the web's Page Actions menu (zinc-800 on zinc-700 border).
 	actionsMenu: {
 		position: 'absolute',
