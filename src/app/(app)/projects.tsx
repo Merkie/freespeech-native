@@ -1,10 +1,9 @@
 import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
 	ActivityIndicator,
 	FlatList,
-	Modal,
 	Pressable,
 	RefreshControl,
 	StyleSheet,
@@ -14,10 +13,12 @@ import {
 	useWindowDimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { CreateProjectModal } from '@/components/CreateProjectModal';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { Icon } from '@/components/icons/Icon';
-import { Button, ErrorText, Field } from '@/components/ui';
+import { Button } from '@/components/ui';
 import api from '@/lib/api';
+import { cacheGet, cacheKeys, cacheSet } from '@/lib/cache';
 import { mediaUrl } from '@/lib/config';
 import { useSettings } from '@/lib/settings';
 import { colors } from '@/lib/theme';
@@ -38,9 +39,23 @@ export default function ProjectsScreen() {
 		try {
 			const { projects: list } = await api.project.list();
 			setProjects(list);
+			cacheSet(cacheKeys.projects, list);
 		} catch {
-			setProjects((prev) => prev ?? []);
+			// Offline — fall back to the last-known list.
+			const cached = await cacheGet<Project[]>(cacheKeys.projects);
+			setProjects((prev) => prev ?? cached ?? []);
 		}
+	}, []);
+
+	// Render the last-known list instantly while the network fetch is in flight.
+	useEffect(() => {
+		let cancelled = false;
+		cacheGet<Project[]>(cacheKeys.projects).then((cached) => {
+			if (!cancelled && cached) setProjects((prev) => prev ?? cached);
+		});
+		return () => {
+			cancelled = true;
+		};
 	}, []);
 
 	useFocusEffect(
@@ -203,66 +218,6 @@ function ProjectCard({
 	);
 }
 
-function CreateProjectModal({
-	visible,
-	onClose,
-	onCreated
-}: {
-	visible: boolean;
-	onClose: () => void;
-	onCreated: (projectId: string) => void;
-}) {
-	const [name, setName] = useState('');
-	const [columns, setColumns] = useState('6');
-	const [rows, setRows] = useState('4');
-	const [error, setError] = useState<string | null>(null);
-	const [loading, setLoading] = useState(false);
-
-	const handleCreate = async () => {
-		const cols = parseInt(columns, 10);
-		const rws = parseInt(rows, 10);
-		if (!name.trim()) return setError('Please enter a project name.');
-		if (!cols || !rws || cols < 1 || rws < 1 || cols > 60 || rws > 60)
-			return setError('Columns and rows must be between 1 and 60.');
-
-		setLoading(true);
-		setError(null);
-		try {
-			const { projectId } = await api.project.create({ name: name.trim(), columns: cols, rows: rws });
-			if (!projectId) throw new Error('Project creation failed.');
-			setName('');
-			onCreated(projectId);
-		} catch (e) {
-			setError(e instanceof Error ? e.message : 'Project creation failed.');
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	return (
-		<Modal visible={visible} animationType="slide" presentationStyle="formSheet" onRequestClose={onClose}>
-			<View style={styles.modal}>
-				<Text style={styles.modalTitle}>New project</Text>
-
-				<Field label="Name" value={name} onChangeText={setName} placeholder="My communication board" />
-				<View style={{ flexDirection: 'row', gap: 12 }}>
-					<View style={{ flex: 1 }}>
-						<Field label="Columns" value={columns} onChangeText={setColumns} keyboardType="number-pad" />
-					</View>
-					<View style={{ flex: 1 }}>
-						<Field label="Rows" value={rows} onChangeText={setRows} keyboardType="number-pad" />
-					</View>
-				</View>
-
-				<ErrorText>{error}</ErrorText>
-
-				<Button title="Create project" onPress={handleCreate} loading={loading} />
-				<Button title="Cancel" variant="ghost" onPress={onClose} />
-			</View>
-		</Modal>
-	);
-}
-
 const styles = StyleSheet.create({
 	safeArea: { flex: 1, backgroundColor: '#18181b' },
 	body: { flex: 1, backgroundColor: colors.background },
@@ -361,7 +316,5 @@ const styles = StyleSheet.create({
 		bottom: 0,
 		backgroundColor: 'rgba(191, 219, 254, 0.2)',
 		borderRadius: 8
-	},
-	modal: { flex: 1, padding: 24, gap: 14, backgroundColor: colors.background },
-	modalTitle: { fontSize: 24, fontWeight: '800', color: colors.text, marginBottom: 8 }
+	}
 });

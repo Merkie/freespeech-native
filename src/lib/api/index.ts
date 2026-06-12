@@ -69,7 +69,23 @@ const project = {
 	updateThumbnail: (projectId: string) =>
 		fetchFromAPI<{ success: boolean }>(`/project/${projectId}/update-thumbnail`, {
 			method: 'POST'
-		})
+		}),
+
+	import: {
+		/** Parsed .obz contents (manifest + .obf JSON files) — see lib/open-board.ts. */
+		obz: (data: { manifest: { root: string }; obfFiles: { fileName: string; data: unknown }[] }) =>
+			fetchFromAPI<{ success?: boolean; projectId?: string }>('/project/import/obz', {
+				method: 'POST',
+				body: data
+			}),
+
+		/** A single parsed .obf page. */
+		obf: (data: unknown) =>
+			fetchFromAPI<{ success?: boolean; projectId?: string }>('/project/import/obf', {
+				method: 'POST',
+				body: data
+			})
+	}
 };
 
 const page = {
