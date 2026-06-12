@@ -273,7 +273,7 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 							<ActivityIndicator size="large" color={colors.primary} />
 						</View>
 					) : (
-						<ScrollView pagingEnabled showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+						<ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
 							{subpages.map((tiles, subpage) => (
 								<TileGridPage
 									key={subpage}
