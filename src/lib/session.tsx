@@ -2,6 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import api from './api';
 import { ApiError, setAuthToken } from './api/client';
+import { clearCache } from './cache';
 import type { User } from './types';
 
 const TOKEN_KEY = 'freespeech_token';
@@ -45,6 +46,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 						// Token rejected by the server — sign out for real.
 						setAuthToken(null);
 						await SecureStore.deleteItemAsync(TOKEN_KEY).catch(() => {});
+						clearCache();
 					} else {
 						// Network hiccup at launch — keep the session; the user
 						// loads lazily once connectivity is back.
@@ -68,6 +70,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 	const signOut = useCallback(async () => {
 		setAuthToken(null);
 		await SecureStore.deleteItemAsync(TOKEN_KEY).catch(() => {});
+		// Cached boards belong to this account — don't leak them into the next one.
+		await clearCache();
 		setToken(null);
 		setUser(null);
 	}, []);

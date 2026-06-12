@@ -18,7 +18,9 @@ import { SentenceBar } from '@/components/board/SentenceBar';
 import { TileGridPage } from '@/components/board/TileGridPage';
 import { Button } from '@/components/ui';
 import api from '@/lib/api';
+import { ApiError } from '@/lib/api/client';
 import { recoverFromMissingBoard } from '@/lib/board-recovery';
+import { cacheDelete, cacheGet, cacheKeys, cacheSet } from '@/lib/cache';
 import { useBoardUi } from '@/lib/board-ui';
 import { useSettings } from '@/lib/settings';
 import { speakText } from '@/lib/speak';
@@ -63,20 +65,49 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 			if (!page?.tilePage || !page?.project) throw new Error('Page not found.');
 			setBoard({ page: page.tilePage, project: page.project, isHomePage });
 		} catch (e) {
+			const cached = await cacheGet<BoardData>(cacheKeys.board(projectId, pageId));
+
+			// Offline with a cached copy — keep showing it; the next load revalidates.
+			if (cached && !(e instanceof ApiError)) {
+				setBoard((prev) => prev ?? cached);
+				return;
+			}
+
 			// Stale pointer (deleted page/project) — route somewhere that exists.
 			if (await recoverFromMissingBoard({ projectId, pageId })) {
+				if (e instanceof ApiError) cacheDelete(cacheKeys.board(projectId, pageId));
 				clearLastVisited();
+				return;
+			}
+			if (cached) {
+				setBoard((prev) => prev ?? cached);
 				return;
 			}
 			setError(e instanceof Error ? e.message : 'Failed to load page.');
 		}
 	}, [projectId, pageId, clearLastVisited]);
 
+	// Render the last-known copy instantly while the network fetch is in flight.
+	useEffect(() => {
+		let cancelled = false;
+		cacheGet<BoardData>(cacheKeys.board(projectId, pageId)).then((cached) => {
+			if (!cancelled && cached) setBoard((prev) => prev ?? cached);
+		});
+		return () => {
+			cancelled = true;
+		};
+	}, [projectId, pageId]);
+
 	useEffect(() => {
 		// loadBoard is async — state is set after the fetch resolves, not synchronously.
 		// eslint-disable-next-line react-hooks/set-state-in-effect
 		loadBoard();
 	}, [loadBoard]);
+
+	// Write-through: keeps the cache current after loads and local edits alike.
+	useEffect(() => {
+		if (board) cacheSet(cacheKeys.board(projectId, pageId), board);
+	}, [board, projectId, pageId]);
 
 	useEffect(() => {
 		if (!board) return;

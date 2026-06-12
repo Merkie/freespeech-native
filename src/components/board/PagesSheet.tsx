@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icons/Icon';
 import { SheetHeader } from '@/components/ui';
 import api from '@/lib/api';
+import { cacheDeletePage } from '@/lib/cache';
 import { colors } from '@/lib/theme';
 import type { TilePage } from '@/lib/types';
 import { PageNameModal } from './PageNameModal';
@@ -49,6 +50,7 @@ export function PagesSheet({
 				onPress: async () => {
 					try {
 						await api.page.delete(page.id);
+						cacheDeletePage(page.id);
 						onPagesChanged(pages.filter((p) => p.id !== page.id));
 					} catch (e) {
 						setError(e instanceof Error ? e.message : 'Failed to delete page.');
