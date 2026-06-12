@@ -34,14 +34,6 @@ export function TileView({
 
 	return (
 		<View style={[styles.wrapper, dimmed && { opacity: 0.4 }]}>
-			{tile.navigation ? (
-				<View
-					style={[
-						styles.navIndicator,
-						{ backgroundColor: tile.backgroundColor, borderColor: tile.borderColor }
-					]}
-				/>
-			) : null}
 			<Pressable
 				onPress={onPress}
 				onLongPress={onLongPress}
@@ -78,6 +70,21 @@ export function TileView({
 					</View>
 				)}
 			</Pressable>
+			{/* Folder tab for navigation tiles — drawn after the tile (like the web's
+			    DOM order) so its fill covers the tile's top border instead of layering
+			    a second line under it. */}
+			{tile.navigation ? (
+				<View
+					pointerEvents="none"
+					style={[
+						styles.navIndicator,
+						{
+							backgroundColor: tile.backgroundColor,
+							borderColor: selected ? '#3b82f6' : tile.borderColor
+						}
+					]}
+				/>
+			) : null}
 		</View>
 	);
 }
