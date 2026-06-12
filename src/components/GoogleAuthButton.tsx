@@ -7,6 +7,7 @@ import { Icon } from '@/components/icons/Icon';
 import api from '@/lib/api';
 import { OAUTH_CALLBACK, WEB_URL } from '@/lib/config';
 import { useSession } from '@/lib/session';
+import { useSettings } from '@/lib/settings';
 import { colors } from '@/lib/theme';
 
 /**
@@ -16,6 +17,7 @@ import { colors } from '@/lib/theme';
  */
 export function GoogleAuthButton({ onError }: { onError: (message: string) => void }) {
 	const { signIn } = useSession();
+	const { clearLastVisited } = useSettings();
 	const [loading, setLoading] = useState(false);
 
 	const handlePress = async () => {
@@ -30,6 +32,8 @@ export function GoogleAuthButton({ onError }: { onError: (message: string) => vo
 			if (!token) throw new Error('Google sign-in failed.');
 
 			await signIn(token);
+			// A different account may sign in — don't inherit the old one's last board.
+			clearLastVisited();
 			router.replace('/projects');
 		} catch (e) {
 			onError(e instanceof Error ? e.message : 'Google sign-in failed.');

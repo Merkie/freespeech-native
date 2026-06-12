@@ -13,10 +13,12 @@ import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { Button, ErrorText, Field } from '@/components/ui';
 import api from '@/lib/api';
 import { useSession } from '@/lib/session';
+import { useSettings } from '@/lib/settings';
 import { colors } from '@/lib/theme';
 
 export default function LoginScreen() {
 	const { signIn } = useSession();
+	const { clearLastVisited } = useSettings();
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [error, setError] = useState<string | null>(null);
@@ -32,6 +34,8 @@ export default function LoginScreen() {
 		try {
 			const { token } = await api.auth.login(email.trim(), password);
 			await signIn(token);
+			// A different account may sign in — don't inherit the old one's last board.
+			clearLastVisited();
 			router.replace('/projects');
 		} catch (e) {
 			setError(e instanceof Error ? e.message : 'Login failed.');

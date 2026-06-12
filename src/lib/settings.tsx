@@ -36,6 +36,8 @@ const DEFAULT_SETTINGS: Settings = {
 type SettingsContextValue = {
 	settings: Settings;
 	updateSettings: (patch: Partial<Settings>) => void;
+	/** Forget the last-visited project/page — run on sign-in so a fresh account never inherits another account's board. */
+	clearLastVisited: () => void;
 };
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -68,8 +70,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 		});
 	}, []);
 
+	const clearLastVisited = useCallback(() => {
+		updateSettings({
+			lastVisitedProjectId: null,
+			lastVisitedPageId: null,
+			lastVisitedHomePageId: null
+		});
+	}, [updateSettings]);
+
 	return (
-		<SettingsContext.Provider value={{ settings, updateSettings }}>
+		<SettingsContext.Provider value={{ settings, updateSettings, clearLastVisited }}>
 			{children}
 		</SettingsContext.Provider>
 	);

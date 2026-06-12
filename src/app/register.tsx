@@ -13,10 +13,12 @@ import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { Button, ErrorText, Field } from '@/components/ui';
 import api from '@/lib/api';
 import { useSession } from '@/lib/session';
+import { useSettings } from '@/lib/settings';
 import { colors } from '@/lib/theme';
 
 export default function RegisterScreen() {
 	const { signIn } = useSession();
+	const { clearLastVisited } = useSettings();
 	const [name, setName] = useState('');
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
@@ -33,6 +35,8 @@ export default function RegisterScreen() {
 		try {
 			const { token } = await api.auth.register(email.trim(), name.trim(), password);
 			await signIn(token);
+			// A brand-new account — don't inherit a previous account's last board.
+			clearLastVisited();
 			router.replace('/projects');
 		} catch (e) {
 			setError(e instanceof Error ? e.message : 'Registration failed.');

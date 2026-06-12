@@ -2,6 +2,7 @@ import { router, usePathname } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icons/Icon';
+import api from '@/lib/api';
 import { useBoardUi } from '@/lib/board-ui';
 import { useSettings } from '@/lib/settings';
 
@@ -22,7 +23,7 @@ export function BottomNav() {
 	const onBoard = boardUi !== null;
 	const editing = boardUi?.editing ?? false;
 
-	const goHome = () => {
+	const goHome = async () => {
 		if (boardUi) {
 			if (boardUi.editing) boardUi.exitEditing();
 			if (!boardUi.homePageId) return;
@@ -30,7 +31,20 @@ export function BottomNav() {
 			if (pathname !== target) router.replace(target);
 			return;
 		}
-		if (!settings.lastVisitedProjectId) return;
+		if (!settings.lastVisitedProjectId) {
+			// Fresh login with nothing selected yet — open the account's first project.
+			try {
+				const { projects } = await api.project.list();
+				if (projects.length > 0) {
+					router.replace(`/project/${projects[0].id}`);
+					return;
+				}
+			} catch {
+				// Fall through to the project list.
+			}
+			if (pathname !== '/projects') router.replace('/projects');
+			return;
+		}
 		if (settings.lastVisitedHomePageId) {
 			router.replace(`/project/${settings.lastVisitedProjectId}/${settings.lastVisitedHomePageId}`);
 		} else {
@@ -48,7 +62,6 @@ export function BottomNav() {
 			<NavButton
 				icon="house-fill"
 				active={onBoard && !editing}
-				disabled={!onBoard && !settings.lastVisitedProjectId}
 				onPress={goHome}
 			/>
 			<NavButton
