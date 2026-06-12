@@ -12,8 +12,8 @@ import {
 	View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { DashboardHeader } from '@/components/DashboardHeader';
 import { Icon } from '@/components/icons/Icon';
-import { ScreenHeader } from '@/components/ui';
 import api from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { useSettings } from '@/lib/settings';
@@ -81,9 +81,9 @@ export default function SettingsScreen() {
 
 	return (
 		<SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-			<ScreenHeader title="Settings" onBack={() => router.back()} />
+			<DashboardHeader />
 
-			<ScrollView contentContainerStyle={styles.content}>
+			<ScrollView style={styles.body} contentContainerStyle={styles.content}>
 				<Text style={styles.sectionTitle}>Voice</Text>
 				<View style={styles.card}>
 					<View style={styles.segmented}>
@@ -247,7 +247,8 @@ function ToggleRow({
 }
 
 const styles = StyleSheet.create({
-	safeArea: { flex: 1, backgroundColor: colors.background },
+	safeArea: { flex: 1, backgroundColor: '#18181b' },
+	body: { backgroundColor: colors.background },
 	content: { padding: 20, paddingTop: 8, gap: 8, paddingBottom: 48 },
 	sectionTitle: {
 		fontSize: 14,

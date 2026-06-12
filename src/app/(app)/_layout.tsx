@@ -1,4 +1,5 @@
 import { Redirect, Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 import { BottomNav } from '@/components/BottomNav';
 import { BoardUiProvider } from '@/lib/board-ui';
@@ -24,6 +25,8 @@ export default function AppLayout() {
 	// and screens switch instantly like the web app.
 	return (
 		<BoardUiProvider>
+			{/* Every app screen now has a dark zinc header at the top. */}
+			<StatusBar style="light" />
 			<View style={{ flex: 1 }}>
 				<View style={{ flex: 1 }}>
 					<Stack screenOptions={{ headerShown: false, animation: 'none' }} />

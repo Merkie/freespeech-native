@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import {
 	ActivityIndicator,
 	Pressable,
@@ -83,33 +82,6 @@ export function ErrorText({ children }: { children: string | null }) {
 	return <Text style={styles.error}>{children}</Text>;
 }
 
-/** Light screen header: optional back button, centered title, optional right action. */
-export function ScreenHeader({
-	title,
-	onBack,
-	right
-}: {
-	title: string;
-	onBack?: () => void;
-	right?: ReactNode;
-}) {
-	return (
-		<View style={styles.screenHeader}>
-			{onBack ? (
-				<Pressable onPress={onBack} style={styles.screenHeaderButton}>
-					<Icon name="arrow-left-short" size={28} color={colors.text} />
-				</Pressable>
-			) : (
-				<View style={{ width: 40 }} />
-			)}
-			<Text style={styles.screenHeaderTitle} numberOfLines={1}>
-				{title}
-			</Text>
-			{right ?? <View style={{ width: 40 }} />}
-		</View>
-	);
-}
-
 /** Modal sheet header: title on the left, close button on the right. */
 export function SheetHeader({ title, onClose }: { title: string; onClose: () => void }) {
 	return (
@@ -171,31 +143,6 @@ const styles = StyleSheet.create({
 	error: {
 		color: colors.danger,
 		fontSize: 14
-	},
-	screenHeader: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		height: 56,
-		paddingHorizontal: 12
-	},
-	screenHeaderButton: {
-		width: 40,
-		height: 40,
-		borderRadius: 10,
-		alignItems: 'center',
-		justifyContent: 'center',
-		backgroundColor: colors.surface,
-		borderWidth: 1,
-		borderColor: colors.border
-	},
-	screenHeaderTitle: {
-		flex: 1,
-		textAlign: 'center',
-		fontSize: 20,
-		fontWeight: '800',
-		color: colors.text,
-		paddingHorizontal: 8
 	},
 	sheetHeader: {
 		flexDirection: 'row',
