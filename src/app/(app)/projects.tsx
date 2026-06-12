@@ -96,11 +96,20 @@ export default function ProjectsScreen() {
 					<ActivityIndicator size="large" color={colors.primary} />
 				</View>
 			) : filtered.length === 0 ? (
-				<View style={styles.center}>
-					<Text style={styles.emptyTitle}>No projects yet</Text>
-					<Text style={styles.emptyText}>Create a project to start building your board.</Text>
-					<Button title="Create project" onPress={() => setCreating(true)} style={{ marginTop: 16 }} />
-				</View>
+				search.trim() ? (
+					<View style={styles.center}>
+						<Text style={styles.emptyTitle}>No results found</Text>
+						<Text style={styles.emptyText}>
+							No projects match “{search.trim()}”.
+						</Text>
+					</View>
+				) : (
+					<View style={styles.center}>
+						<Text style={styles.emptyTitle}>No projects yet</Text>
+						<Text style={styles.emptyText}>Create a project to start building your board.</Text>
+						<Button title="Create project" onPress={() => setCreating(true)} style={{ marginTop: 16 }} />
+					</View>
+				)
 			) : (
 				<FlatList
 					key={numColumns}
