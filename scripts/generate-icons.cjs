@@ -15,6 +15,7 @@ const NAMES = [
 	'check-lg',
 	'chevron-down',
 	'clipboard',
+	'download',
 	'envelope',
 	'eraser-fill',
 	'gear',

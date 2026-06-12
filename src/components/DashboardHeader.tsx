@@ -48,7 +48,12 @@ export function DashboardHeader() {
 				);
 			})}
 			<View style={{ flex: 1 }} />
-			<View style={styles.avatarWrap}>
+			<Pressable
+				onPress={() => {
+					if (pathname !== '/profile') router.replace('/profile');
+				}}
+				style={styles.avatarWrap}
+			>
 				{profileUrl ? (
 					<Image source={{ uri: profileUrl }} style={styles.avatar} contentFit="cover" />
 				) : (
@@ -56,7 +61,7 @@ export function DashboardHeader() {
 						<Text style={styles.avatarInitials}>{initials}</Text>
 					</View>
 				)}
-			</View>
+			</Pressable>
 		</View>
 	);
 }
