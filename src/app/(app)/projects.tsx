@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CreateProjectModal } from '@/components/CreateProjectModal';
 import { DashboardHeader } from '@/components/DashboardHeader';
+import { ManageProjectsModal } from '@/components/ManageProjectsModal';
 import { Icon } from '@/components/icons/Icon';
 import { Button } from '@/components/ui';
 import api from '@/lib/api';
@@ -34,6 +35,7 @@ export default function ProjectsScreen() {
 	const [refreshing, setRefreshing] = useState(false);
 	const [search, setSearch] = useState('');
 	const [creating, setCreating] = useState(false);
+	const [managing, setManaging] = useState(false);
 
 	const loadProjects = useCallback(async () => {
 		try {
@@ -104,6 +106,10 @@ export default function ProjectsScreen() {
 						<Icon name="plus-lg" size={16} color="#eff6ff" />
 						<Text style={styles.createButtonText}>Create New Project</Text>
 					</Pressable>
+					<Pressable onPress={() => setManaging(true)} style={styles.manageButton}>
+						<Icon name="gear" size={16} color="#fafafa" />
+						<Text style={styles.manageButtonText}>Manage Projects</Text>
+					</Pressable>
 				</View>
 
 				{!filtered ? (
@@ -161,6 +167,13 @@ export default function ProjectsScreen() {
 						loadProjects();
 						router.push(`/project/${projectId}`);
 					}}
+				/>
+
+				<ManageProjectsModal
+					visible={managing}
+					projects={projects ?? []}
+					onChanged={loadProjects}
+					onClose={() => setManaging(false)}
 				/>
 			</View>
 		</SafeAreaView>
@@ -261,6 +274,19 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 18
 	},
 	createButtonText: { color: '#eff6ff', fontSize: 15 },
+	// Web: border-zinc-600 bg-zinc-700 text-zinc-50.
+	manageButton: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 8,
+		backgroundColor: '#3f3f46',
+		borderWidth: 1,
+		borderColor: '#52525b',
+		borderRadius: 6,
+		paddingVertical: 10,
+		paddingHorizontal: 18
+	},
+	manageButtonText: { color: '#fafafa', fontSize: 15 },
 	center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
 	emptyTitle: { fontSize: 20, fontWeight: '700', color: colors.text },
 	emptyText: { fontSize: 15, color: colors.textMuted, marginTop: 4, textAlign: 'center' },
