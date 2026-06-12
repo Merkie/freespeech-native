@@ -9,6 +9,7 @@ import {
 	View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { GoogleAuthButton } from '@/components/GoogleAuthButton';
 import { Button, ErrorText, Field } from '@/components/ui';
 import api from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -75,6 +76,14 @@ export default function LoginScreen() {
 
 						<Button title="Sign in" onPress={handleLogin} loading={loading} />
 
+						<View style={styles.dividerRow}>
+							<View style={styles.dividerLine} />
+							<Text style={styles.dividerText}>or</Text>
+							<View style={styles.dividerLine} />
+						</View>
+
+						<GoogleAuthButton onError={setError} />
+
 						<Link href="/register" style={styles.link}>
 							New to FreeSpeech? Create an account
 						</Link>
@@ -115,5 +124,8 @@ const styles = StyleSheet.create({
 		color: colors.primaryDark,
 		fontSize: 15,
 		marginTop: 8
-	}
+	},
+	dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+	dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
+	dividerText: { color: colors.textFaint, fontSize: 13 }
 });

@@ -19,6 +19,13 @@ const auth = {
 			body: { email, name, password }
 		}),
 
+	/** Google auth URL whose callback lands on the web app; state rides along. */
+	oauthUrls: (origin: string, state?: string) =>
+		fetchFromAPI<{ google: string }>('/auth/oauth-urls', {
+			method: 'POST',
+			body: { origin, state }
+		}),
+
 	me: () => fetchFromAPI<{ user: User }>('/auth/me')
 };
 
