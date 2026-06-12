@@ -18,6 +18,7 @@ import { SentenceBar } from '@/components/board/SentenceBar';
 import { TileGridPage } from '@/components/board/TileGridPage';
 import { Button } from '@/components/ui';
 import api from '@/lib/api';
+import { recoverFromMissingBoard } from '@/lib/board-recovery';
 import { useBoardUi } from '@/lib/board-ui';
 import { useSettings } from '@/lib/settings';
 import { speakText } from '@/lib/speak';
@@ -38,7 +39,7 @@ export default function BoardScreen() {
 }
 
 function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
-	const { settings, updateSettings } = useSettings();
+	const { settings, updateSettings, clearLastVisited } = useSettings();
 	const { setBoardUi } = useBoardUi();
 	const insets = useSafeAreaInsets();
 
@@ -62,9 +63,14 @@ function Board({ projectId, pageId }: { projectId: string; pageId: string }) {
 			if (!page?.tilePage || !page?.project) throw new Error('Page not found.');
 			setBoard({ page: page.tilePage, project: page.project, isHomePage });
 		} catch (e) {
+			// Stale pointer (deleted page/project) — route somewhere that exists.
+			if (await recoverFromMissingBoard({ projectId, pageId })) {
+				clearLastVisited();
+				return;
+			}
 			setError(e instanceof Error ? e.message : 'Failed to load page.');
 		}
-	}, [projectId, pageId]);
+	}, [projectId, pageId, clearLastVisited]);
 
 	useEffect(() => {
 		// loadBoard is async — state is set after the fetch resolves, not synchronously.

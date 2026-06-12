@@ -3,11 +3,14 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/ui';
 import api from '@/lib/api';
+import { recoverFromMissingBoard } from '@/lib/board-recovery';
+import { useSettings } from '@/lib/settings';
 import { colors } from '@/lib/theme';
 
 /** Resolves a project's home page and forwards to the board, like the web's /app/project/[projectId]. */
 export default function ProjectIndexScreen() {
 	const { projectId } = useLocalSearchParams<{ projectId: string }>();
+	const { clearLastVisited } = useSettings();
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
@@ -26,14 +29,20 @@ export default function ProjectIndexScreen() {
 				if (!pageId) throw new Error('This project has no pages.');
 				if (!cancelled) router.replace(`/project/${projectId}/${pageId}`);
 			} catch (e) {
-				if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to open project.');
+				if (cancelled) return;
+				// Stale pointer (deleted project) — route somewhere that exists.
+				if (await recoverFromMissingBoard({ projectId })) {
+					clearLastVisited();
+					return;
+				}
+				setError(e instanceof Error ? e.message : 'Failed to open project.');
 			}
 		})();
 
 		return () => {
 			cancelled = true;
 		};
-	}, [projectId]);
+	}, [projectId, clearLastVisited]);
 
 	return (
 		<View style={styles.center}>
