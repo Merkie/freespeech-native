@@ -28,7 +28,7 @@ export default function SettingsScreen() {
 	const { settings, updateSettings } = useSettings();
 
 	const [elevenLabsVoices, setElevenLabsVoices] = useState<VoiceOption[] | null>(null);
-	const [deviceVoices, setDeviceVoices] = useState<VoiceOption[]>([]);
+	const [deviceVoices, setDeviceVoices] = useState<VoiceOption[] | null>(null);
 	const [testing, setTesting] = useState(false);
 
 	useEffect(() => {
@@ -51,7 +51,7 @@ export default function SettingsScreen() {
 						.map((voice) => ({ id: voice.identifier, name: voice.name }))
 				)
 			)
-			.catch(() => {});
+			.catch(() => setDeviceVoices([]));
 	}, []);
 
 	const testVoice = async () => {
@@ -107,7 +107,7 @@ export default function SettingsScreen() {
 
 					{usingElevenLabs ? (
 						elevenLabsVoices === null ? (
-							<ActivityIndicator color={colors.primary} style={{ marginVertical: 16 }} />
+							<VoiceListLoading />
 						) : elevenLabsVoices.length === 0 ? (
 							<Text style={styles.muted}>{"Couldn't load AI voices right now."}</Text>
 						) : (
@@ -119,6 +119,8 @@ export default function SettingsScreen() {
 								}
 							/>
 						)
+					) : deviceVoices === null ? (
+						<VoiceListLoading />
 					) : (
 						<VoiceList
 							voices={[{ id: '', name: 'System default' }, ...deviceVoices]}
@@ -218,6 +220,19 @@ function VoiceList({
 	);
 }
 
+/**
+ * Placeholder shown while voices load. Reserves the list's full height so the
+ * sections below don't jump down when the voices arrive.
+ */
+function VoiceListLoading() {
+	return (
+		<View style={styles.voiceListLoading}>
+			<ActivityIndicator size="large" color={colors.primary} />
+			<Text style={styles.muted}>Loading voices…</Text>
+		</View>
+	);
+}
+
 function VoiceRow({ name, selected, onPress }: { name: string; selected: boolean; onPress: () => void }) {
 	return (
 		<Pressable onPress={onPress} style={[styles.voiceRow, selected && { borderColor: colors.primary }]}>
@@ -281,6 +296,7 @@ const styles = StyleSheet.create({
 	segmentActive: { backgroundColor: colors.primary },
 	segmentText: { fontSize: 15, fontWeight: '600', color: colors.text },
 	voiceList: { maxHeight: 320 },
+	voiceListLoading: { height: 320, alignItems: 'center', justifyContent: 'center', gap: 12 },
 	voiceRow: {
 		flexDirection: 'row',
 		alignItems: 'center',
